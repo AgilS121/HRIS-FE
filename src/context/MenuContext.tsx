@@ -30,7 +30,7 @@ export function MenuProvider({ children }: { children: ReactNode }) {
     if (isUnrestricted) return true
     const perm = menus.find(m => m.menu_key === key)
     if (!perm) return false
-    return perm[`can_${action}` as keyof MenuPermission] as boolean
+    return !!perm[`can_${action}` as keyof MenuPermission]
   }
 
   return (
