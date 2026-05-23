@@ -125,6 +125,9 @@ export const employeesApi = {
 export const attendanceApi = {
   list: (company_id: number, date_from: string, date_to: string) =>
     api.get('/hr/attendance', { params: { company_id, date_from, date_to } }).then((r) => r.data.data),
+  create: (d: object) => api.post('/hr/attendance', d).then((r) => r.data.data),
+  update: (id: number, d: object) => api.put(`/hr/attendance/${id}`, d).then((r) => r.data.data),
+  remove: (id: number) => api.delete(`/hr/attendance/${id}`).then((r) => r.data),
   clockIn: (employee_id: number, lat?: number, lng?: number) =>
     api.post('/hr/attendance/clock-in', { employee_id, lat, lng }).then((r) => r.data.data),
   clockOut: (employee_id: number) =>
