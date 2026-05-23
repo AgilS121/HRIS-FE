@@ -11,6 +11,7 @@ import Attendance from '@/pages/Attendance'
 import Leave from '@/pages/Leave'
 import Departments from '@/pages/Departments'
 import Roles from '@/pages/Roles'
+import Payroll from '@/pages/Payroll'
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
@@ -30,6 +31,7 @@ function AppShell() {
           <Route path="/leave"       element={<Leave />} />
           <Route path="/departments" element={<Departments />} />
           <Route path="/roles"       element={<Roles />} />
+          <Route path="/payroll"     element={<Payroll />} />
         </Routes>
         </div>
       </main>

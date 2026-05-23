@@ -134,6 +134,44 @@ export const attendanceApi = {
     api.post('/hr/attendance/clock-out', { employee_id }).then((r) => r.data.data),
 }
 
+export const payrollApi = {
+  // Components
+  components:      (company_id: number) =>
+    api.get('/hr/payroll-components', { params: { company_id } }).then((r) => r.data.data),
+  createComponent: (d: object) =>
+    api.post('/hr/payroll-components', d).then((r) => r.data.data),
+  updateComponent: (id: number, d: object) =>
+    api.put(`/hr/payroll-components/${id}`, d).then((r) => r.data.data),
+  deleteComponent: (id: number) =>
+    api.delete(`/hr/payroll-components/${id}`).then((r) => r.data),
+
+  // Employee component overrides
+  employeeComponents:    (employee_id: number) =>
+    api.get(`/hr/employees/${employee_id}/components`).then((r) => r.data.data),
+  setEmployeeComponent:  (employee_id: number, d: object) =>
+    api.post(`/hr/employees/${employee_id}/components`, d).then((r) => r.data.data),
+  removeEmployeeComponent: (id: number) =>
+    api.delete(`/hr/employee-components/${id}`).then((r) => r.data),
+
+  // Payroll runs
+  runs:     (company_id: number) =>
+    api.get('/hr/payroll-runs', { params: { company_id } }).then((r) => r.data.data),
+  createRun: (d: object) =>
+    api.post('/hr/payroll-runs', d).then((r) => r.data.data),
+  generate: (id: number) =>
+    api.post(`/hr/payroll-runs/${id}/generate`).then((r) => r.data.data),
+  lock:     (id: number) =>
+    api.put(`/hr/payroll-runs/${id}/lock`).then((r) => r.data.data),
+  markPaid: (id: number) =>
+    api.put(`/hr/payroll-runs/${id}/paid`).then((r) => r.data.data),
+
+  // Payslips
+  payslips: (run_id: number) =>
+    api.get(`/hr/payroll-runs/${run_id}/payslips`).then((r) => r.data.data),
+  payslip:  (id: number) =>
+    api.get(`/hr/payslips/${id}`).then((r) => r.data.data),
+}
+
 export const leaveApi = {
   // Leave types
   types:      (company_id: number) =>

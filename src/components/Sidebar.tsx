@@ -6,6 +6,7 @@ const ALL_LINKS = [
   { to: '/employees',   label: 'Employees',         icon: '👤', key: 'employees'   },
   { to: '/attendance',  label: 'Attendance',         icon: '📋', key: 'attendance'  },
   { to: '/leave',       label: 'Leave',              icon: '🏖️', key: 'leave'       },
+  { to: '/payroll',     label: 'Payroll',            icon: '💰', key: 'payroll'     },
   { to: '/departments', label: 'Departments',        icon: '🏢', key: 'departments' },
   { to: '/roles',       label: 'Roles & Permissions',icon: '🔐', key: 'roles'       },
 ]
