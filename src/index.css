@@ -1,3 +1,52 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Poppins', ui-sans-serif, system-ui;
+    color: #232933;
+    background: #F6F7F8;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer components {
+  /* ── Buttons ─────────────────────────────────────────────────────────────── */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 font-medium
+           transition-all duration-150 cursor-pointer select-none
+           focus:outline-none focus:ring-2 focus:ring-navy-500/30
+           disabled:opacity-50 disabled:cursor-not-allowed rounded-md;
+  }
+  .btn-sm  { @apply btn text-xs px-3 py-1.5; }
+  .btn-md  { @apply btn text-sm px-4 py-2; }
+  .btn-lg  { @apply btn text-base px-5 py-2.5; }
+
+  .btn-primary   { @apply bg-navy-500 text-white hover:bg-navy-600 active:bg-navy-700; }
+  .btn-secondary { @apply bg-white text-gray-800 border border-gray-300 hover:bg-gray-100; }
+  .btn-danger    { @apply bg-danger-600 text-white hover:bg-danger-700; }
+  .btn-ghost     { @apply text-navy-500 hover:bg-navy-50; }
+
+  /* ── Inputs ──────────────────────────────────────────────────────────────── */
+  .input {
+    @apply w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm
+           text-gray-900 placeholder-gray-400
+           focus:outline-none focus:ring-2 focus:ring-navy-500/30 focus:border-navy-500
+           disabled:bg-gray-100 disabled:cursor-not-allowed transition;
+  }
+
+  /* ── Cards ───────────────────────────────────────────────────────────────── */
+  .card { @apply bg-white rounded-lg shadow-card; }
+
+  /* ── Badges ──────────────────────────────────────────────────────────────── */
+  .badge        { @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium; }
+  .badge-green  { @apply badge bg-success-50 text-success-700; }
+  .badge-red    { @apply badge bg-danger-50 text-danger-700; }
+  .badge-gray   { @apply badge bg-gray-200 text-gray-600; }
+  .badge-navy   { @apply badge bg-navy-50 text-navy-600; }
+  .badge-yellow { @apply badge bg-warning-50 text-warning-600; }
+}

@@ -14,7 +14,7 @@ function AppShell() {
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <main className="flex-1 bg-gray-50">
+      <main className="flex-1 bg-gray-100 min-h-screen overflow-auto">
         <Routes>
           <Route path="/" element={<Navigate to="/employees" replace />} />
           <Route path="/employees" element={<Employees />} />
