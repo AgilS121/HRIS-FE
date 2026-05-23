@@ -41,13 +41,29 @@ export const companiesApi = {
 }
 
 export const departmentsApi = {
-  list: (company_id: number) =>
+  list:   (company_id: number) =>
     api.get('/master/departments', { params: { company_id } }).then((r) => r.data.data),
+  get:    (id: number) =>
+    api.get(`/master/departments/${id}`).then((r) => r.data.data),
+  create: (d: object) =>
+    api.post('/master/departments', d).then((r) => r.data.data),
+  update: (id: number, d: object) =>
+    api.put(`/master/departments/${id}`, d).then((r) => r.data.data),
+  delete: (id: number) =>
+    api.delete(`/master/departments/${id}`).then((r) => r.data),
 }
 
 export const positionsApi = {
-  list: (company_id: number) =>
+  list:   (company_id: number) =>
     api.get('/master/positions', { params: { company_id } }).then((r) => r.data.data),
+  get:    (id: number) =>
+    api.get(`/master/positions/${id}`).then((r) => r.data.data),
+  create: (d: object) =>
+    api.post('/master/positions', d).then((r) => r.data.data),
+  update: (id: number, d: object) =>
+    api.put(`/master/positions/${id}`, d).then((r) => r.data.data),
+  delete: (id: number) =>
+    api.delete(`/master/positions/${id}`).then((r) => r.data),
 }
 
 // ─── HR ──────────────────────────────────────────────────────────────────────

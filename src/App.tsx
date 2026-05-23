@@ -5,6 +5,7 @@ import PrivateRoute from '@/components/PrivateRoute'
 import Sidebar from '@/components/Sidebar'
 import Login from '@/pages/Login'
 import Employees from '@/pages/Employees'
+import Departments from '@/pages/Departments'
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
@@ -17,8 +18,8 @@ function AppShell() {
       <main className="flex-1 bg-gray-100 min-h-screen overflow-auto">
         <Routes>
           <Route path="/" element={<Navigate to="/employees" replace />} />
-          <Route path="/employees" element={<Employees />} />
-          {/* More pages wired in as they're built */}
+          <Route path="/employees"   element={<Employees />} />
+          <Route path="/departments" element={<Departments />} />
         </Routes>
       </main>
     </div>

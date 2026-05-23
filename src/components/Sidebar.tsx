@@ -2,10 +2,10 @@ import { NavLink } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 
 const links = [
-  { to: '/employees',        label: 'Employees',  icon: '👤' },
-  { to: '/attendance',       label: 'Attendance', icon: '📋' },
-  { to: '/leave',            label: 'Leave',      icon: '🏖️' },
-  { to: '/master/companies', label: 'Companies',  icon: '🏢' },
+  { to: '/employees',   label: 'Employees',   icon: '👤' },
+  { to: '/attendance',  label: 'Attendance',  icon: '📋' },
+  { to: '/leave',       label: 'Leave',       icon: '🏖️' },
+  { to: '/departments', label: 'Departments', icon: '🏢' },
 ]
 
 export default function Sidebar() {
