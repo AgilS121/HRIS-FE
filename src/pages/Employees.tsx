@@ -6,18 +6,36 @@ import ConfirmDialog from '@/components/ConfirmDialog'
 
 interface Employee {
   id: number
+  company_id: number
   employee_no: string
   full_name: string
+  nickname: string | null
   email: string | null
   phone: string | null
   gender: string
+  birth_place: string | null
+  birth_date: string | null
+  national_id: string | null
+  tax_id: string | null
+  marital_status: string
+  address: string | null
   department_id: number | null
   position_id: number | null
   department_name: string | null
   position_name: string | null
+  join_date: string
   employment_type: string
   status: string
-  join_date: string
+  contract_number: string | null
+  contract_start: string | null
+  contract_end: string | null
+  contract_months: number | null
+  contract_file: string | null
+  bank_name: string | null
+  bank_account_no: string | null
+  bank_account_name: string | null
+  salary_grade: string | null
+  basic_salary: number | null
 }
 
 const COMPANY_ID = 1

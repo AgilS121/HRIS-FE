@@ -59,6 +59,22 @@ export const employeesApi = {
   create: (d: object) => api.post('/hr/employees', d).then((r) => r.data.data),
   update: (id: number, d: object) => api.put(`/hr/employees/${id}`, d).then((r) => r.data.data),
   terminate: (id: number) => api.delete(`/hr/employees/${id}`).then((r) => r.data),
+
+  // Extended profile endpoints (008)
+  createFull: (d: object) =>
+    api.post('/hr/employees/full', d).then((r) => r.data.data),
+  updateFull: (id: number, d: object) =>
+    api.put(`/hr/employees/${id}/full`, d).then((r) => r.data.data),
+  nextNo: (department_id: number) =>
+    api.get('/hr/employees/next-no', { params: { department_id } }).then((r) => r.data.data),
+  uploadContract: (id: number, file: File, meta: Record<string, string | number | null>) => {
+    const fd = new FormData()
+    fd.append('contract', file)
+    Object.entries(meta).forEach(([k, v]) => {
+      if (v != null) fd.append(k, String(v))
+    })
+    return api.post(`/hr/employees/${id}/contract`, fd).then((r) => r.data.data)
+  },
 }
 
 export const attendanceApi = {
