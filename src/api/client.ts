@@ -162,8 +162,17 @@ export const leaveApi = {
     api.get('/hr/leave-requests', { params: { company_id } }).then((r) => r.data.data),
   pending:    (company_id: number) =>
     api.get('/hr/leave-requests/pending', { params: { company_id } }).then((r) => r.data.data),
-  create:     (d: object) =>
-    api.post('/hr/leave-requests', d).then((r) => r.data.data),
+  create: (d: object, file?: File | null) => {
+    if (file) {
+      const fd = new FormData()
+      Object.entries(d as Record<string, unknown>).forEach(([k, v]) => {
+        if (v != null) fd.append(k, String(v))
+      })
+      fd.append('attachment', file)
+      return api.post('/hr/leave-requests', fd).then((r) => r.data.data)
+    }
+    return api.post('/hr/leave-requests', d).then((r) => r.data.data)
+  },
   approve:    (id: number, note?: string) =>
     api.put(`/hr/leave-requests/${id}/approve`, { note }).then((r) => r.data.data),
   reject:     (id: number, note: string) =>

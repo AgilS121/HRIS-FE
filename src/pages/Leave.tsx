@@ -20,6 +20,7 @@ interface LeaveType {
   name: string
   quota_days: number
   is_paid: boolean
+  requires_attachment: boolean
   min_advance_days: number
   carry_over_max: number
   is_encashable: boolean
@@ -51,6 +52,7 @@ interface LeaveRequest {
   status: 'pending' | 'approved' | 'rejected' | 'cancelled'
   approved_by_name?: string
   note?: string
+  attachment_path?: string
   created_at: string
 }
 
@@ -307,16 +309,16 @@ interface LeaveRequestModalProps {
 function LeaveRequestModal({ open, onClose, employees, leaveTypes }: LeaveRequestModalProps) {
   const qc = useQueryClient()
   const [form, setForm] = useState<RequestFormState>(emptyRequestForm())
-  const [errors, setErrors] = useState<Partial<RequestFormState>>({})
+  const [errors, setErrors] = useState<Partial<RequestFormState & { file: string }>>({})
+  const [file, setFile] = useState<File | null>(null)
 
   useMemo(() => {
-    if (open) { setForm(emptyRequestForm()); setErrors({}) }
+    if (open) { setForm(emptyRequestForm()); setErrors({}); setFile(null) }
   }, [open])
 
   const set = (k: keyof RequestFormState, v: string) => {
     setForm(f => {
       const next = { ...f, [k]: v }
-      // Auto-calc working days when dates change
       if ((k === 'start_date' || k === 'end_date')) {
         const start = k === 'start_date' ? v : f.start_date
         const end   = k === 'end_date'   ? v : f.end_date
@@ -326,8 +328,10 @@ function LeaveRequestModal({ open, onClose, employees, leaveTypes }: LeaveReques
     })
   }
 
+  const selectedType = leaveTypes.find(t => t.id === Number(form.leave_type_id))
+
   const validate = (): boolean => {
-    const e: Partial<RequestFormState> = {}
+    const e: Partial<RequestFormState & { file: string }> = {}
     if (!form.employee_id)   e.employee_id   = 'Required'
     if (!form.leave_type_id) e.leave_type_id = 'Required'
     if (!form.start_date)    e.start_date    = 'Required'
@@ -335,12 +339,14 @@ function LeaveRequestModal({ open, onClose, employees, leaveTypes }: LeaveReques
     if (form.start_date && form.end_date && form.end_date < form.start_date)
       e.end_date = 'End date must be after start date'
     if (!form.reason.trim()) e.reason = 'Required'
+    if (selectedType?.requires_attachment && !file) e.file = 'Supporting document is required for this leave type'
     setErrors(e)
     return Object.keys(e).length === 0
   }
 
   const mutation = useMutation({
-    mutationFn: (d: object) => leaveApi.create(d),
+    mutationFn: ({ data, attachment }: { data: object; attachment: File | null }) =>
+      leaveApi.create(data, attachment),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['leave-requests'] })
       qc.invalidateQueries({ queryKey: ['leave-requests-pending'] })
@@ -352,17 +358,17 @@ function LeaveRequestModal({ open, onClose, employees, leaveTypes }: LeaveReques
   const submit = () => {
     if (!validate()) return
     mutation.mutate({
-      employee_id:   Number(form.employee_id),
-      leave_type_id: Number(form.leave_type_id),
-      start_date:    form.start_date,
-      end_date:      form.end_date,
-      total_days:    Number(form.total_days) || 1,
-      reason:        form.reason.trim(),
+      data: {
+        employee_id:   Number(form.employee_id),
+        leave_type_id: Number(form.leave_type_id),
+        start_date:    form.start_date,
+        end_date:      form.end_date,
+        total_days:    Number(form.total_days) || 1,
+        reason:        form.reason.trim(),
+      },
+      attachment: file,
     })
   }
-
-  // Selected type quota hint
-  const selectedType = leaveTypes.find(t => t.id === Number(form.leave_type_id))
 
   return (
     <Modal open={open} onClose={onClose} title="New Leave Request" width="max-w-xl">
@@ -407,6 +413,11 @@ function LeaveRequestModal({ open, onClose, employees, leaveTypes }: LeaveReques
             Quota: {selectedType.quota_days} days/yr &nbsp;·&nbsp;
             Min advance: {selectedType.min_advance_days} day(s) &nbsp;·&nbsp;
             {selectedType.is_paid ? 'Paid' : 'Unpaid'}
+            {selectedType.requires_attachment && (
+              <span className="ml-2 font-semibold" style={{ color: 'var(--warning-700)' }}>
+                · Attachment required
+              </span>
+            )}
           </div>
         )}
 
@@ -446,6 +457,24 @@ function LeaveRequestModal({ open, onClose, employees, leaveTypes }: LeaveReques
             value={form.reason}
             onChange={e => set('reason', e.target.value)}
           />
+        </FormField>
+
+        <FormField
+          label="Supporting Document"
+          required={!!selectedType?.requires_attachment}
+          error={errors.file}
+        >
+          <input
+            type="file"
+            className="input w-full text-sm"
+            accept=".pdf,.jpg,.jpeg,.png"
+            onChange={e => setFile(e.target.files?.[0] ?? null)}
+          />
+          <p className="mt-1 text-xs" style={{ color: 'var(--gray-400)' }}>
+            {selectedType?.requires_attachment
+              ? 'Required — PDF, JPG, or PNG (e.g. doctor\'s letter)'
+              : 'Optional — PDF, JPG, or PNG'}
+          </p>
         </FormField>
 
         {mutation.isError && (
@@ -1024,6 +1053,17 @@ function RequestsTab({ employees, leaveTypes, pendingCount }: RequestsTabProps) 
                       <p className="text-xs truncate" style={{ color: 'var(--gray-600)' }} title={req.reason}>
                         {req.reason || <span style={{ color: 'var(--gray-300)' }}>—</span>}
                       </p>
+                      {req.attachment_path && (
+                        <a
+                          href={`/${req.attachment_path}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs mt-0.5 inline-flex items-center gap-1"
+                          style={{ color: 'var(--navy-500)' }}
+                        >
+                          📎 View attachment
+                        </a>
+                      )}
                     </td>
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-1">
