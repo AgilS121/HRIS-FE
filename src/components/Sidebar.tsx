@@ -2,33 +2,42 @@ import { NavLink } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 
 const links = [
-  { to: '/employees',         label: 'Employees',   icon: '👤' },
-  { to: '/attendance',        label: 'Attendance',  icon: '📋' },
-  { to: '/leave',             label: 'Leave',       icon: '🏖️' },
-  { to: '/master/companies',  label: 'Companies',   icon: '🏢' },
+  { to: '/employees',        label: 'Employees',  icon: '👤' },
+  { to: '/attendance',       label: 'Attendance', icon: '📋' },
+  { to: '/leave',            label: 'Leave',      icon: '🏖️' },
+  { to: '/master/companies', label: 'Companies',  icon: '🏢' },
 ]
 
 export default function Sidebar() {
   const { user, logout } = useAuth()
 
   return (
-    <aside className="w-60 min-h-screen bg-navy-900 flex flex-col shrink-0">
+    <aside
+      className="w-60 min-h-screen flex flex-col shrink-0"
+      style={{ backgroundColor: 'var(--navy-900)' }}
+    >
       {/* Logo */}
-      <div className="px-6 py-5 border-b border-navy-800">
+      <div className="px-6 py-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-md bg-navy-500 flex items-center justify-center">
-            <span className="text-white font-display font-bold text-sm">H</span>
+          <div
+            className="w-8 h-8 rounded-md flex items-center justify-center"
+            style={{ backgroundColor: 'var(--navy-500)' }}
+          >
+            <span className="text-white font-bold text-sm" style={{ fontFamily: 'Montserrat' }}>H</span>
           </div>
           <div>
-            <p className="text-white font-display font-bold text-sm leading-tight">HRIS</p>
-            <p className="text-navy-400 text-xs">TUV Nord Indonesia</p>
+            <p className="text-white font-bold text-sm leading-tight" style={{ fontFamily: 'Montserrat' }}>
+              HRIS
+            </p>
+            <p className="text-xs" style={{ color: 'rgba(200,215,255,0.5)' }}>TUV Nord Indonesia</p>
           </div>
         </div>
       </div>
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-0.5">
-        <p className="px-3 pb-2 text-navy-400 text-xs font-medium uppercase tracking-wider">
+        <p className="px-3 pb-2 text-xs font-medium uppercase tracking-wider"
+           style={{ color: 'rgba(200,215,255,0.4)' }}>
           Main Menu
         </p>
         {links.map(({ to, label, icon }) => (
@@ -37,11 +46,27 @@ export default function Sidebar() {
             to={to}
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-all ${
-                isActive
-                  ? 'bg-navy-500 text-white font-medium'
-                  : 'text-navy-200 hover:bg-navy-800 hover:text-white'
+                isActive ? 'font-medium' : ''
               }`
             }
+            style={({ isActive }) => isActive
+              ? { backgroundColor: 'var(--navy-500)', color: '#fff' }
+              : { color: 'rgba(200,215,255,0.8)' }
+            }
+            onMouseEnter={e => {
+              const el = e.currentTarget
+              if (!el.getAttribute('aria-current')) {
+                el.style.backgroundColor = 'rgba(255,255,255,0.06)'
+                el.style.color = '#fff'
+              }
+            }}
+            onMouseLeave={e => {
+              const el = e.currentTarget
+              if (!el.getAttribute('aria-current')) {
+                el.style.backgroundColor = ''
+                el.style.color = 'rgba(200,215,255,0.8)'
+              }
+            }}
           >
             <span className="text-base w-5 text-center">{icon}</span>
             {label}
@@ -49,22 +74,36 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* User */}
-      <div className="mx-3 mb-4 p-3 rounded-md bg-navy-800 border border-navy-700">
+      {/* User card */}
+      <div
+        className="mx-3 mb-4 p-3 rounded-md"
+        style={{
+          backgroundColor: 'rgba(255,255,255,0.05)',
+          border: '1px solid rgba(255,255,255,0.08)',
+        }}
+      >
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-8 h-8 rounded-full bg-navy-500 flex items-center justify-center shrink-0">
+          <div
+            className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
+            style={{ backgroundColor: 'var(--navy-500)' }}
+          >
             <span className="text-white text-xs font-semibold">
               {user?.name?.charAt(0).toUpperCase()}
             </span>
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-white text-xs font-medium truncate">{user?.name}</p>
-            <p className="text-navy-400 text-xs truncate">{user?.email}</p>
+            <p className="text-xs truncate" style={{ color: 'rgba(200,215,255,0.5)' }}>
+              {user?.email}
+            </p>
           </div>
         </div>
         <button
           onClick={logout}
-          className="mt-2.5 w-full text-xs text-navy-300 hover:text-danger-400 transition text-left"
+          className="mt-2.5 text-xs transition-colors text-left"
+          style={{ color: 'rgba(200,215,255,0.45)' }}
+          onMouseEnter={e => (e.currentTarget.style.color = 'var(--danger-600)')}
+          onMouseLeave={e => (e.currentTarget.style.color = 'rgba(200,215,255,0.45)')}
         >
           Sign out →
         </button>
