@@ -24,10 +24,34 @@ export default api
 // ─── Auth ────────────────────────────────────────────────────────────────────
 
 export const authApi = {
-  login: (email: string, password: string) =>
+  login:   (email: string, password: string) =>
     api.post('/auth/login', { email, password }).then((r) => r.data.data),
-  me: () => api.get('/auth/me').then((r) => r.data.data),
-  logout: () => api.post('/auth/logout').then((r) => r.data),
+  me:      () => api.get('/auth/me').then((r) => r.data.data),
+  logout:  () => api.post('/auth/logout').then((r) => r.data),
+  myMenus: () => api.get('/auth/my-menus').then((r) => r.data.data as MenuPermission[]),
+}
+
+export interface MenuPermission {
+  menu_key:   string
+  can_view:   boolean
+  can_create: boolean
+  can_edit:   boolean
+  can_delete: boolean
+}
+
+export const rolesApi = {
+  list:   (company_id: number) =>
+    api.get('/master/roles', { params: { company_id } }).then((r) => r.data.data),
+  get:    (id: number) =>
+    api.get(`/master/roles/${id}`).then((r) => r.data.data),
+  create: (d: object) =>
+    api.post('/master/roles', d).then((r) => r.data.data),
+  update: (id: number, d: object) =>
+    api.put(`/master/roles/${id}`, d).then((r) => r.data.data),
+  delete: (id: number) =>
+    api.delete(`/master/roles/${id}`).then((r) => r.data),
+  assignUserRole: (userId: number, roleId: number) =>
+    api.put(`/master/users/${userId}/role`, { role_id: roleId }).then((r) => r.data),
 }
 
 // ─── Master ──────────────────────────────────────────────────────────────────

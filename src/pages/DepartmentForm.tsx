@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
-import { departmentsApi } from '@/api/client'
+import { departmentsApi, rolesApi } from '@/api/client'
 import Modal from '@/components/Modal'
 import FormField from '@/components/FormField'
 
@@ -10,6 +10,7 @@ interface Department {
   name: string
   code: string | null
   parent_id: number | null
+  default_role_id: number | null
 }
 
 interface Props {
@@ -19,7 +20,7 @@ interface Props {
   companyId: number
 }
 
-const EMPTY = { name: '', code: '', parent_id: '' }
+const EMPTY = { name: '', code: '', parent_id: '', default_role_id: '' }
 
 export default function DepartmentForm({ open, onClose, department, companyId }: Props) {
   const qc     = useQueryClient()
@@ -30,7 +31,12 @@ export default function DepartmentForm({ open, onClose, department, companyId }:
   useEffect(() => {
     setErrors({})
     setForm(department
-      ? { name: department.name, code: department.code ?? '', parent_id: department.parent_id ? String(department.parent_id) : '' }
+      ? {
+          name:            department.name,
+          code:            department.code ?? '',
+          parent_id:       department.parent_id ? String(department.parent_id) : '',
+          default_role_id: department.default_role_id ? String(department.default_role_id) : '',
+        }
       : EMPTY
     )
   }, [department, open])
@@ -38,6 +44,12 @@ export default function DepartmentForm({ open, onClose, department, companyId }:
   const { data: allDepts = [] } = useQuery<Department[]>({
     queryKey: ['departments', companyId],
     queryFn: () => departmentsApi.list(companyId),
+    enabled: open,
+  })
+
+  const { data: roles = [] } = useQuery<{ id: number; name: string }[]>({
+    queryKey: ['roles', companyId],
+    queryFn: () => rolesApi.list(companyId),
     enabled: open,
   })
 
@@ -69,10 +81,11 @@ export default function DepartmentForm({ open, onClose, department, companyId }:
     ev.preventDefault()
     if (!validate()) return
     mutation.mutate({
-      company_id: companyId,
-      name:       form.name.trim(),
-      code:       form.code.trim() || null,
-      parent_id:  form.parent_id ? Number(form.parent_id) : null,
+      company_id:      companyId,
+      name:            form.name.trim(),
+      code:            form.code.trim() || null,
+      parent_id:       form.parent_id       ? Number(form.parent_id)       : null,
+      default_role_id: form.default_role_id ? Number(form.default_role_id) : null,
     })
   }
 
@@ -106,6 +119,18 @@ export default function DepartmentForm({ open, onClose, department, companyId }:
               <option key={d.id} value={d.id}>{d.name}</option>
             ))}
           </select>
+        </FormField>
+
+        <FormField label="Default Role">
+          <select className="input" value={form.default_role_id} onChange={set('default_role_id')}>
+            <option value="">— No default role —</option>
+            {(roles as { id: number; name: string }[]).map(r => (
+              <option key={r.id} value={r.id}>{r.name}</option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs" style={{ color: 'var(--gray-400)' }}>
+            New employees assigned to this department inherit this role by default.
+          </p>
         </FormField>
 
         <div className="flex gap-3 justify-end pt-2"

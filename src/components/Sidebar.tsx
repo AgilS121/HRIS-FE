@@ -1,15 +1,20 @@
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
+import { useMenus } from '@/context/MenuContext'
 
-const links = [
-  { to: '/employees',   label: 'Employees',   icon: '👤' },
-  { to: '/attendance',  label: 'Attendance',  icon: '📋' },
-  { to: '/leave',       label: 'Leave',       icon: '🏖️' },
-  { to: '/departments', label: 'Departments', icon: '🏢' },
+const ALL_LINKS = [
+  { to: '/employees',   label: 'Employees',         icon: '👤', key: 'employees'   },
+  { to: '/attendance',  label: 'Attendance',         icon: '📋', key: 'attendance'  },
+  { to: '/leave',       label: 'Leave',              icon: '🏖️', key: 'leave'       },
+  { to: '/departments', label: 'Departments',        icon: '🏢', key: 'departments' },
+  { to: '/roles',       label: 'Roles & Permissions',icon: '🔐', key: 'roles'       },
 ]
 
 export default function Sidebar() {
   const { user, logout } = useAuth()
+  const { can, isUnrestricted } = useMenus()
+
+  const links = ALL_LINKS.filter(l => isUnrestricted || can(l.key, 'view'))
 
   return (
     <aside

@@ -1,11 +1,13 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider, useAuth } from '@/context/AuthContext'
+import { MenuProvider } from '@/context/MenuContext'
 import PrivateRoute from '@/components/PrivateRoute'
 import Sidebar from '@/components/Sidebar'
 import Login from '@/pages/Login'
 import Employees from '@/pages/Employees'
 import Departments from '@/pages/Departments'
+import Roles from '@/pages/Roles'
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
@@ -20,6 +22,7 @@ function AppShell() {
           <Route path="/" element={<Navigate to="/employees" replace />} />
           <Route path="/employees"   element={<Employees />} />
           <Route path="/departments" element={<Departments />} />
+          <Route path="/roles"       element={<Roles />} />
         </Routes>
       </main>
     </div>
@@ -48,9 +51,11 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <BrowserRouter>
-          <RootRouter />
-        </BrowserRouter>
+        <MenuProvider>
+          <BrowserRouter>
+            <RootRouter />
+          </BrowserRouter>
+        </MenuProvider>
       </AuthProvider>
     </QueryClientProvider>
   )
