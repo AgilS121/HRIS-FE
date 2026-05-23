@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { employeesApi, departmentsApi, positionsApi } from '@/api/client'
+import { employeesApi, departmentsApi, positionsApi, rolesApi } from '@/api/client'
 import Modal from '@/components/Modal'
 import FormField from '@/components/FormField'
 
@@ -69,6 +69,7 @@ const EMPTY_FORM = {
   employee_no:      '',
   department_id:    '',
   position_id:      '',
+  role_id:          '',
   join_date:        '',
   employment_type:  'permanent',
   salary_grade:     '',
@@ -194,6 +195,11 @@ export default function EmployeeForm({ open, onClose, employee, companyId }: Pro
     queryFn: () => positionsApi.list(companyId),
     enabled: open,
   })
+  const { data: roles = [] } = useQuery({
+    queryKey: ['roles', companyId],
+    queryFn: () => rolesApi.list(companyId),
+    enabled: open,
+  })
 
   // Save mutation
   const mutation = useMutation({
@@ -282,6 +288,7 @@ export default function EmployeeForm({ open, onClose, employee, companyId }: Pro
       phone:             nullable(form.phone),
       department_id:     form.department_id ? Number(form.department_id) : null,
       position_id:       form.position_id   ? Number(form.position_id)   : null,
+      role_id:           form.role_id       ? Number(form.role_id)       : null,
       join_date:         form.join_date,
       employment_type:   form.employment_type,
       salary_grade:      nullable(form.salary_grade),
@@ -303,6 +310,7 @@ export default function EmployeeForm({ open, onClose, employee, companyId }: Pro
   // Filtered positions per selected department (if backend doesn't filter)
   const dept = departments as { id: number; name: string; code?: string }[]
   const pos  = positions  as { id: number; name: string; department_id?: number }[]
+  const rol  = roles      as { id: number; name: string }[]
 
   return (
     <Modal
@@ -516,6 +524,25 @@ export default function EmployeeForm({ open, onClose, employee, companyId }: Pro
                 </select>
               </FormField>
             </div>
+
+            <FormField label="Role & Access">
+              <select
+                className="input"
+                value={form.role_id}
+                onChange={set('role_id')}
+                disabled={isEdit}
+              >
+                <option value="">— No role (unrestricted) —</option>
+                {rol.map(r => (
+                  <option key={r.id} value={r.id}>{r.name}</option>
+                ))}
+              </select>
+              {isEdit && (
+                <p className="mt-1 text-xs" style={{ color: 'var(--gray-400)' }}>
+                  Change role from the Roles & Permissions page.
+                </p>
+              )}
+            </FormField>
 
             <div className="grid grid-cols-2 gap-4">
               <FormField label="Join Date" required error={errors.join_date}>
