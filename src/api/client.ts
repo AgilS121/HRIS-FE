@@ -24,11 +24,16 @@ export default api
 // ─── Auth ────────────────────────────────────────────────────────────────────
 
 export const authApi = {
-  login:   (email: string, password: string) =>
+  login:          (email: string, password: string) =>
     api.post('/auth/login', { email, password }).then((r) => r.data.data),
-  me:      () => api.get('/auth/me').then((r) => r.data.data),
-  logout:  () => api.post('/auth/logout').then((r) => r.data),
-  myMenus: () => api.get('/auth/my-menus').then((r) => r.data.data as MenuPermission[]),
+  me:             () => api.get('/auth/me').then((r) => r.data.data),
+  logout:         () => api.post('/auth/logout').then((r) => r.data),
+  myMenus:        () => api.get('/auth/my-menus').then((r) => r.data.data as MenuPermission[]),
+  changePassword: (d: { current_password: string; new_email: string; new_password: string; confirm_password: string }) =>
+    api.post('/auth/change-password', d).then((r) => r.data.data),
+  extendTemp:     (userId: number) =>
+    api.post(`/auth/users/${userId}/extend-temp`, {}).then((r) => r.data.data),
+  tempUsers:      () => api.get('/auth/temp-users').then((r) => r.data.data),
 }
 
 export interface MenuPermission {

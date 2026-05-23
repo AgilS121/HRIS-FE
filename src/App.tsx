@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from '@/context/AuthContext'
 import { MenuProvider } from '@/context/MenuContext'
 import PrivateRoute from '@/components/PrivateRoute'
 import Sidebar from '@/components/Sidebar'
+import TempPasswordBanner from '@/components/TempPasswordBanner'
 import Login from '@/pages/Login'
 import Employees from '@/pages/Employees'
 import Departments from '@/pages/Departments'
@@ -17,13 +18,16 @@ function AppShell() {
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <main className="flex-1 bg-gray-100 min-h-screen overflow-auto">
+      <main className="flex-1 bg-gray-100 min-h-screen overflow-auto flex flex-col">
+        <TempPasswordBanner />
+        <div className="flex-1">
         <Routes>
           <Route path="/" element={<Navigate to="/employees" replace />} />
           <Route path="/employees"   element={<Employees />} />
           <Route path="/departments" element={<Departments />} />
           <Route path="/roles"       element={<Roles />} />
         </Routes>
+        </div>
       </main>
     </div>
   )

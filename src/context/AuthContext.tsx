@@ -1,26 +1,39 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { authApi } from '@/api/client'
 
-interface User { id: number; email: string; name: string }
+interface User {
+  id: number
+  email: string
+  name: string
+  is_temp: boolean
+  hours_remaining: number | null
+  temp_until: string | null
+}
+
 interface AuthCtx {
   user: User | null
   token: string | null
-  login: (email: string, password: string) => Promise<void>
+  login: (email: string, password: string) => Promise<{ is_temp: boolean; hours_remaining: number | null }>
   logout: () => void
+  refreshUser: () => Promise<void>
   loading: boolean
 }
 
 const AuthContext = createContext<AuthCtx | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [token, setToken] = useState<string | null>(localStorage.getItem('token'))
+  const [user, setUser]     = useState<User | null>(null)
+  const [token, setToken]   = useState<string | null>(localStorage.getItem('token'))
   const [loading, setLoading] = useState(!!token)
+
+  const fetchMe = async () => {
+    const data = await authApi.me()
+    setUser(data)
+  }
 
   useEffect(() => {
     if (!token) { setLoading(false); return }
-    authApi.me()
-      .then(setUser)
+    fetchMe()
       .catch(() => { localStorage.removeItem('token'); setToken(null) })
       .finally(() => setLoading(false))
   }, [token])
@@ -29,7 +42,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const data = await authApi.login(email, password)
     localStorage.setItem('token', data.token)
     setToken(data.token)
-    setUser(data.user)
+    setUser({ ...data.user, is_temp: !!data.is_temp, hours_remaining: data.hours_remaining, temp_until: data.temp_until })
+    return { is_temp: !!data.is_temp, hours_remaining: data.hours_remaining }
   }
 
   const logout = () => {
@@ -39,8 +53,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
   }
 
+  const refreshUser = fetchMe
+
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, token, login, logout, refreshUser, loading }}>
       {children}
     </AuthContext.Provider>
   )

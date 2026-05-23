@@ -18,8 +18,11 @@ export default function Login() {
       await login(email, password)
       navigate('/')
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })
-        ?.response?.data?.message ?? 'Login failed. Please check your credentials.'
+      const raw = (err as { response?: { data?: { message?: string } } })
+        ?.response?.data?.message ?? ''
+      const msg = raw === 'temp_expired'
+        ? 'Your temporary credentials have expired. Please contact your administrator to extend access.'
+        : raw || 'Login failed. Please check your credentials.'
       setError(msg)
     } finally {
       setBusy(false)
