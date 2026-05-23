@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { departmentsApi } from '@/api/client'
+import { useMenus } from '@/context/MenuContext'
 import DepartmentForm from './DepartmentForm'
 import ConfirmDialog from '@/components/ConfirmDialog'
 
@@ -18,6 +19,7 @@ const COMPANY_ID = 1
 
 export default function Departments() {
   const qc = useQueryClient()
+  const { can } = useMenus()
   const [search, setSearch]       = useState('')
   const [formOpen, setFormOpen]   = useState(false)
   const [editing, setEditing]     = useState<Department | null>(null)
@@ -61,7 +63,9 @@ export default function Departments() {
             Manage company divisions and sub-departments
           </p>
         </div>
-        <button className="btn-md btn-primary" onClick={openAdd}>+ Add Department</button>
+        {can('departments', 'create') && (
+          <button className="btn-md btn-primary" onClick={openAdd}>+ Add Department</button>
+        )}
       </div>
 
       {/* Stats */}
@@ -120,10 +124,12 @@ export default function Departments() {
                 {topLevel.map(dept => (
                   <>
                     <DeptRow key={dept.id} dept={dept} indent={false}
-                             onEdit={openEdit} onDelete={setDeleting} />
+                             onEdit={openEdit} onDelete={setDeleting}
+                             canEdit={can('departments', 'edit')} canDelete={can('departments', 'delete')} />
                     {children(dept.id).map(sub => (
                       <DeptRow key={sub.id} dept={sub} indent
-                               onEdit={openEdit} onDelete={setDeleting} />
+                               onEdit={openEdit} onDelete={setDeleting}
+                               canEdit={can('departments', 'edit')} canDelete={can('departments', 'delete')} />
                     ))}
                   </>
                 ))}
@@ -132,7 +138,8 @@ export default function Departments() {
                   .filter(d => d.parent_id && !topLevel.find(t => t.id === d.parent_id))
                   .map(dept => (
                     <DeptRow key={dept.id} dept={dept} indent={false}
-                             onEdit={openEdit} onDelete={setDeleting} />
+                             onEdit={openEdit} onDelete={setDeleting}
+                             canEdit={can('departments', 'edit')} canDelete={can('departments', 'delete')} />
                   ))}
               </tbody>
             </table>
@@ -142,7 +149,7 @@ export default function Departments() {
                 <p className="text-sm mb-3" style={{ color: 'var(--gray-400)' }}>
                   {search ? 'No departments match your search.' : 'No departments yet.'}
                 </p>
-                {!search && (
+                {!search && can('departments', 'create') && (
                   <button className="btn-md btn-primary" onClick={openAdd}>Add first department</button>
                 )}
               </div>
@@ -173,12 +180,14 @@ export default function Departments() {
 }
 
 function DeptRow({
-  dept, indent, onEdit, onDelete,
+  dept, indent, onEdit, onDelete, canEdit, canDelete,
 }: {
   dept: Department
   indent: boolean
   onEdit: (d: Department) => void
   onDelete: (d: Department) => void
+  canEdit: boolean
+  canDelete: boolean
 }) {
   return (
     <tr
@@ -234,16 +243,20 @@ function DeptRow({
       {/* Actions */}
       <td className="px-5 py-3.5">
         <div className="flex items-center gap-1 justify-end">
-          <button className="btn-sm btn-ghost text-xs" onClick={() => onEdit(dept)}>Edit</button>
-          <button
-            className="btn-sm text-xs px-2 py-1 rounded-md transition-colors"
-            style={{ color: 'var(--danger-600)' }}
-            onMouseEnter={e => (e.currentTarget.style.background = 'var(--danger-50)')}
-            onMouseLeave={e => (e.currentTarget.style.background = '')}
-            onClick={() => onDelete(dept)}
-          >
-            Delete
-          </button>
+          {canEdit && (
+            <button className="btn-sm btn-ghost text-xs" onClick={() => onEdit(dept)}>Edit</button>
+          )}
+          {canDelete && (
+            <button
+              className="btn-sm text-xs px-2 py-1 rounded-md transition-colors"
+              style={{ color: 'var(--danger-600)' }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'var(--danger-50)')}
+              onMouseLeave={e => (e.currentTarget.style.background = '')}
+              onClick={() => onDelete(dept)}
+            >
+              Delete
+            </button>
+          )}
         </div>
       </td>
     </tr>

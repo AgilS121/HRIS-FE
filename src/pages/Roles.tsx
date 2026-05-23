@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { rolesApi } from '@/api/client'
+import { useMenus } from '@/context/MenuContext'
 import Modal from '@/components/Modal'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import FormField from '@/components/FormField'
@@ -26,6 +27,7 @@ const EMPTY_MENUS = (): MenuRow[] =>
 
 export default function Roles() {
   const qc = useQueryClient()
+  const { can } = useMenus()
   const [formOpen, setFormOpen]   = useState(false)
   const [deleting, setDeleting]   = useState<Role | null>(null)
   const [editRole, setEditRole]   = useState<Role | null>(null)
@@ -137,7 +139,9 @@ export default function Roles() {
             Define roles and control which menus each role can access
           </p>
         </div>
-        <button className="btn-md btn-primary" onClick={openAdd}>+ Add Role</button>
+        {can('roles', 'create') && (
+          <button className="btn-md btn-primary" onClick={openAdd}>+ Add Role</button>
+        )}
       </div>
 
       {/* Roles list */}
@@ -185,16 +189,20 @@ export default function Roles() {
                   </td>
                   <td className="px-5 py-3.5">
                     <div className="flex gap-1 justify-end">
-                      <button className="btn-sm btn-ghost text-xs" onClick={() => openEdit(role)}>
-                        Edit Permissions
-                      </button>
-                      <button className="btn-sm text-xs px-2 py-1 rounded-md transition-colors"
-                              style={{ color: 'var(--danger-600)' }}
-                              onMouseEnter={e => (e.currentTarget.style.background = 'var(--danger-50)')}
-                              onMouseLeave={e => (e.currentTarget.style.background = '')}
-                              onClick={() => setDeleting(role)}>
-                        Delete
-                      </button>
+                      {can('roles', 'edit') && (
+                        <button className="btn-sm btn-ghost text-xs" onClick={() => openEdit(role)}>
+                          Edit Permissions
+                        </button>
+                      )}
+                      {can('roles', 'delete') && (
+                        <button className="btn-sm text-xs px-2 py-1 rounded-md transition-colors"
+                                style={{ color: 'var(--danger-600)' }}
+                                onMouseEnter={e => (e.currentTarget.style.background = 'var(--danger-50)')}
+                                onMouseLeave={e => (e.currentTarget.style.background = '')}
+                                onClick={() => setDeleting(role)}>
+                          Delete
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

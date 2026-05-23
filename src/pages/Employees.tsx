@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { employeesApi } from '@/api/client'
+import { useMenus } from '@/context/MenuContext'
 import EmployeeForm from './EmployeeForm'
 import ConfirmDialog from '@/components/ConfirmDialog'
 
@@ -55,6 +56,7 @@ const TYPE_LABEL: Record<string, string> = {
 
 export default function Employees() {
   const qc = useQueryClient()
+  const { can } = useMenus()
   const [search, setSearch] = useState('')
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<Employee | null>(null)
@@ -100,9 +102,11 @@ export default function Employees() {
             Manage your workforce and employee records
           </p>
         </div>
-        <button className="btn-md btn-primary" onClick={openAdd}>
-          + Add Employee
-        </button>
+        {can('employees', 'create') && (
+          <button className="btn-md btn-primary" onClick={openAdd}>
+            + Add Employee
+          </button>
+        )}
       </div>
 
       {/* Stats */}
@@ -202,13 +206,15 @@ export default function Employees() {
                     {/* Actions */}
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-1 justify-end">
-                        <button
-                          className="btn-sm btn-ghost text-xs"
-                          onClick={() => openEdit(emp)}
-                        >
-                          Edit
-                        </button>
-                        {emp.status !== 'terminated' && emp.status !== 'resigned' && (
+                        {can('employees', 'edit') && (
+                          <button
+                            className="btn-sm btn-ghost text-xs"
+                            onClick={() => openEdit(emp)}
+                          >
+                            Edit
+                          </button>
+                        )}
+                        {can('employees', 'delete') && emp.status !== 'terminated' && emp.status !== 'resigned' && (
                           <button
                             className="btn-sm text-xs px-2 py-1 rounded-md transition-colors"
                             style={{ color: 'var(--danger-600)' }}
