@@ -1,0 +1,82 @@
+import axios from 'axios'
+
+const api = axios.create({ baseURL: '/api' })
+
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token')
+  if (token) config.headers.Authorization = `Bearer ${token}`
+  return config
+})
+
+api.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    if (err.response?.status === 401) {
+      localStorage.removeItem('token')
+      window.location.href = '/login'
+    }
+    return Promise.reject(err)
+  }
+)
+
+export default api
+
+// ─── Auth ────────────────────────────────────────────────────────────────────
+
+export const authApi = {
+  login: (email: string, password: string) =>
+    api.post('/auth/login', { email, password }).then((r) => r.data.data),
+  me: () => api.get('/auth/me').then((r) => r.data.data),
+  logout: () => api.post('/auth/logout').then((r) => r.data),
+}
+
+// ─── Master ──────────────────────────────────────────────────────────────────
+
+export const companiesApi = {
+  list: () => api.get('/master/companies').then((r) => r.data.data),
+  get: (id: number) => api.get(`/master/companies/${id}`).then((r) => r.data.data),
+  create: (d: object) => api.post('/master/companies', d).then((r) => r.data.data),
+  update: (id: number, d: object) => api.put(`/master/companies/${id}`, d).then((r) => r.data.data),
+  delete: (id: number) => api.delete(`/master/companies/${id}`).then((r) => r.data),
+}
+
+export const departmentsApi = {
+  list: (company_id: number) =>
+    api.get('/master/departments', { params: { company_id } }).then((r) => r.data.data),
+}
+
+export const positionsApi = {
+  list: (company_id: number) =>
+    api.get('/master/positions', { params: { company_id } }).then((r) => r.data.data),
+}
+
+// ─── HR ──────────────────────────────────────────────────────────────────────
+
+export const employeesApi = {
+  list: (company_id: number) =>
+    api.get('/hr/employees', { params: { company_id } }).then((r) => r.data.data),
+  get: (id: number) => api.get(`/hr/employees/${id}`).then((r) => r.data.data),
+  create: (d: object) => api.post('/hr/employees', d).then((r) => r.data.data),
+  update: (id: number, d: object) => api.put(`/hr/employees/${id}`, d).then((r) => r.data.data),
+  terminate: (id: number) => api.delete(`/hr/employees/${id}`).then((r) => r.data),
+}
+
+export const attendanceApi = {
+  list: (company_id: number, date_from: string, date_to: string) =>
+    api.get('/hr/attendance', { params: { company_id, date_from, date_to } }).then((r) => r.data.data),
+  clockIn: (employee_id: number, lat?: number, lng?: number) =>
+    api.post('/hr/attendance/clock-in', { employee_id, lat, lng }).then((r) => r.data.data),
+  clockOut: (employee_id: number) =>
+    api.post('/hr/attendance/clock-out', { employee_id }).then((r) => r.data.data),
+}
+
+export const leaveApi = {
+  types: (company_id: number) =>
+    api.get('/hr/leave-types', { params: { company_id } }).then((r) => r.data.data),
+  list: (company_id: number) =>
+    api.get('/hr/leave-requests', { params: { company_id } }).then((r) => r.data.data),
+  create: (d: object) => api.post('/hr/leave-requests', d).then((r) => r.data.data),
+  approve: (id: number) => api.put(`/hr/leave-requests/${id}/approve`, {}).then((r) => r.data.data),
+  reject: (id: number, note?: string) =>
+    api.put(`/hr/leave-requests/${id}/reject`, { note }).then((r) => r.data.data),
+}
