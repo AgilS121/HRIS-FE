@@ -8,6 +8,7 @@ import TempPasswordBanner from '@/components/TempPasswordBanner'
 import Login from '@/pages/Login'
 import Employees from '@/pages/Employees'
 import Attendance from '@/pages/Attendance'
+import Leave from '@/pages/Leave'
 import Departments from '@/pages/Departments'
 import Roles from '@/pages/Roles'
 
@@ -26,6 +27,7 @@ function AppShell() {
           <Route path="/" element={<Navigate to="/employees" replace />} />
           <Route path="/employees"   element={<Employees />} />
           <Route path="/attendance"  element={<Attendance />} />
+          <Route path="/leave"       element={<Leave />} />
           <Route path="/departments" element={<Departments />} />
           <Route path="/roles"       element={<Roles />} />
         </Routes>

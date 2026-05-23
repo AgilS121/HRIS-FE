@@ -135,12 +135,39 @@ export const attendanceApi = {
 }
 
 export const leaveApi = {
-  types: (company_id: number) =>
+  // Leave types
+  types:      (company_id: number) =>
     api.get('/hr/leave-types', { params: { company_id } }).then((r) => r.data.data),
-  list: (company_id: number) =>
+  createType: (d: object) =>
+    api.post('/hr/leave-types', d).then((r) => r.data.data),
+  updateType: (id: number, d: object) =>
+    api.put(`/hr/leave-types/${id}`, d).then((r) => r.data.data),
+  deleteType: (id: number) =>
+    api.delete(`/hr/leave-types/${id}`).then((r) => r.data),
+
+  // Leave balances
+  myBalances:  (employee_id: number, year: number) =>
+    api.get('/hr/leave-balances', { params: { employee_id, year } }).then((r) => r.data.data),
+  allBalances: (company_id: number, year: number) =>
+    api.get('/hr/leave-balances/all', { params: { company_id, year } }).then((r) => r.data.data),
+  initBalance: (d: object) =>
+    api.post('/hr/leave-balances/init', d).then((r) => r.data.data),
+  adjust:      (d: object) =>
+    api.post('/hr/leave-adjustments', d).then((r) => r.data.data),
+
+  // Leave requests
+  myRequests: (employee_id: number) =>
+    api.get('/hr/leave-requests/mine', { params: { employee_id } }).then((r) => r.data.data),
+  list:       (company_id: number) =>
     api.get('/hr/leave-requests', { params: { company_id } }).then((r) => r.data.data),
-  create: (d: object) => api.post('/hr/leave-requests', d).then((r) => r.data.data),
-  approve: (id: number) => api.put(`/hr/leave-requests/${id}/approve`, {}).then((r) => r.data.data),
-  reject: (id: number, note?: string) =>
+  pending:    (company_id: number) =>
+    api.get('/hr/leave-requests/pending', { params: { company_id } }).then((r) => r.data.data),
+  create:     (d: object) =>
+    api.post('/hr/leave-requests', d).then((r) => r.data.data),
+  approve:    (id: number, note?: string) =>
+    api.put(`/hr/leave-requests/${id}/approve`, { note }).then((r) => r.data.data),
+  reject:     (id: number, note: string) =>
     api.put(`/hr/leave-requests/${id}/reject`, { note }).then((r) => r.data.data),
+  cancel:     (id: number, reason?: string) =>
+    api.put(`/hr/leave-requests/${id}/cancel`, { reason }).then((r) => r.data.data),
 }
