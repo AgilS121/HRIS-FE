@@ -13,7 +13,9 @@ const ALL_LINKS = [
   { to: '/overtime',       label: 'Overtime',           icon: '⏰', key: 'overtime'       },
   { to: '/shift',         label: 'Shift & Roster',     icon: '📅', key: 'shift'          },
   { to: '/work-schedule', label: 'Work Schedule',      icon: '🕐', key: 'work_schedule'  },
-  { to: '/audit-log',    label: 'Audit Log',          icon: '📝', key: 'audit_log'     },
+  { to: '/holidays',     label: 'Holidays',           icon: '🗓️', key: 'holidays'      },
+  { to: '/my-portal',   label: 'My Portal',          icon: '🪪', key: 'my_portal'     },
+  { to: '/audit-log',   label: 'Audit Log',           icon: '📝', key: 'audit_log'     },
   { to: '/roles',       label: 'Roles & Permissions',icon: '🔐', key: 'roles'       },
   { to: '/users',       label: 'Users',              icon: '👥', key: 'users'       },
 ]

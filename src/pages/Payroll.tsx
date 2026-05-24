@@ -502,6 +502,17 @@ function PayslipModal({ open, onClose, payslipId }: { open: boolean; onClose: ()
             <span>Net Take-Home</span>
             <span>{fmtMoney(payslip.net_salary)}</span>
           </div>
+
+          {/* Print */}
+          <div className="flex justify-end pt-1">
+            <button
+              onClick={() => window.print()}
+              className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+              style={{ background: 'var(--gray-100)', color: 'var(--gray-700)', border: '1px solid var(--gray-200)' }}
+            >
+              Print / Save PDF
+            </button>
+          </div>
         </div>
       )}
     </Modal>

@@ -19,6 +19,8 @@ import WorkSchedule from '@/pages/WorkSchedule'
 import AuditLog from '@/pages/AuditLog'
 import Overtime from '@/pages/Overtime'
 import Shift from '@/pages/Shift'
+import Holiday from '@/pages/Holiday'
+import MyPortal from '@/pages/MyPortal'
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
@@ -45,6 +47,8 @@ function AppShell() {
           <Route path="/overtime"      element={<Overtime />} />
           <Route path="/shift"         element={<Shift />} />
           <Route path="/work-schedule" element={<WorkSchedule />} />
+          <Route path="/holidays"      element={<Holiday />} />
+          <Route path="/my-portal"     element={<MyPortal />} />
           <Route path="/audit-log"     element={<AuditLog />} />
         </Routes>
         </div>

@@ -245,6 +245,20 @@ export const lateRulesApi = {
     api.delete(`/master/late-rules/${id}`).then((r) => r.data),
 }
 
+export const holidaysApi = {
+  list:   (company_id: number, year: number, month: number) =>
+    api.get('/master/holidays', { params: { company_id, year, month } }).then((r) => r.data.data),
+  create: (d: object) =>
+    api.post('/master/holidays', d).then((r) => r.data.data),
+  delete: (id: number) =>
+    api.delete(`/master/holidays/${id}`).then((r) => r.data),
+}
+
+export const selfServiceApi = {
+  myPayslips: (employee_id: number) =>
+    api.get('/hr/my-payslips', { params: { employee_id } }).then((r) => r.data.data),
+}
+
 export const leaveApi = {
   // Leave types
   types:      (company_id: number) =>
