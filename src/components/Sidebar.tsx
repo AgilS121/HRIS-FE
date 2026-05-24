@@ -3,19 +3,22 @@ import { useAuth } from '@/context/AuthContext'
 import { useMenus } from '@/context/MenuContext'
 
 const ALL_LINKS = [
-  { to: '/employees',   label: 'Employees',         icon: '👤', key: 'employees'   },
+  { to: '/dashboard',   label: 'Dashboard',          icon: '📊', key: 'dashboard'   },
+  { to: '/employees',   label: 'Employees',          icon: '👤', key: 'employees'   },
   { to: '/attendance',  label: 'Attendance',         icon: '📋', key: 'attendance'  },
   { to: '/leave',       label: 'Leave',              icon: '🏖️', key: 'leave'       },
   { to: '/payroll',     label: 'Payroll',            icon: '💰', key: 'payroll'     },
   { to: '/departments', label: 'Departments',        icon: '🏢', key: 'departments' },
+  { to: '/positions',   label: 'Positions',          icon: '🎯', key: 'positions'   },
   { to: '/roles',       label: 'Roles & Permissions',icon: '🔐', key: 'roles'       },
+  { to: '/users',       label: 'Users',              icon: '👥', key: 'users'       },
 ]
 
 export default function Sidebar() {
   const { user, logout } = useAuth()
   const { can, isUnrestricted } = useMenus()
 
-  const links = ALL_LINKS.filter(l => isUnrestricted || can(l.key, 'view'))
+  const links = ALL_LINKS.filter(l => l.key === 'dashboard' || isUnrestricted || can(l.key, 'view'))
 
   return (
     <aside

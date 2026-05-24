@@ -6,12 +6,15 @@ import PrivateRoute from '@/components/PrivateRoute'
 import Sidebar from '@/components/Sidebar'
 import TempPasswordBanner from '@/components/TempPasswordBanner'
 import Login from '@/pages/Login'
+import Dashboard from '@/pages/Dashboard'
 import Employees from '@/pages/Employees'
 import Attendance from '@/pages/Attendance'
 import Leave from '@/pages/Leave'
 import Departments from '@/pages/Departments'
+import Positions from '@/pages/Positions'
 import Roles from '@/pages/Roles'
 import Payroll from '@/pages/Payroll'
+import Users from '@/pages/Users'
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
@@ -25,13 +28,16 @@ function AppShell() {
         <TempPasswordBanner />
         <div className="flex-1">
         <Routes>
-          <Route path="/" element={<Navigate to="/employees" replace />} />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/dashboard"   element={<Dashboard />} />
           <Route path="/employees"   element={<Employees />} />
           <Route path="/attendance"  element={<Attendance />} />
           <Route path="/leave"       element={<Leave />} />
           <Route path="/departments" element={<Departments />} />
+          <Route path="/positions"   element={<Positions />} />
           <Route path="/roles"       element={<Roles />} />
           <Route path="/payroll"     element={<Payroll />} />
+          <Route path="/users"       element={<Users />} />
         </Routes>
         </div>
       </main>

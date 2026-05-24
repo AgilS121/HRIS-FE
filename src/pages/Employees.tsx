@@ -37,6 +37,7 @@ interface Employee {
   bank_account_name: string | null
   salary_grade: string | null
   basic_salary: number | null
+  role_id: number | null
 }
 
 const COMPANY_ID = 1

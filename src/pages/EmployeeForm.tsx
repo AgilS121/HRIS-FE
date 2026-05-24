@@ -36,6 +36,7 @@ interface Employee {
   bank_account_name: string | null
   salary_grade: string | null
   basic_salary: number | null
+  role_id: number | null
 }
 
 interface Props {
@@ -168,6 +169,7 @@ export default function EmployeeForm({ open, onClose, employee, companyId }: Pro
         bank_name:         employee.bank_name ?? '',
         bank_account_no:   employee.bank_account_no ?? '',
         bank_account_name: employee.bank_account_name ?? '',
+        role_id:           employee.role_id ? String(employee.role_id) : '',
       })
     } else {
       setForm(EMPTY_FORM)
@@ -788,7 +790,7 @@ export default function EmployeeForm({ open, onClose, employee, companyId }: Pro
         >
           {/* Tab navigation helper */}
           <div className="flex gap-1">
-            {TABS.map((t, i) => (
+            {TABS.map((t) => (
               <button
                 key={t}
                 type="button"

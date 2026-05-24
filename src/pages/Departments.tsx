@@ -12,6 +12,7 @@ interface Department {
   code: string | null
   parent_id: number | null
   parent_name: string | null
+  default_role_id: number | null
   is_active: number
 }
 
