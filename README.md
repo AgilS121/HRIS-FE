@@ -7,18 +7,23 @@ Admin web dashboard for the HRIS system, built with **React + Vite + Tailwind CS
 | Module | Description |
 |---|---|
 | **Dashboard** | Overview cards — employee count, attendance summary, pending leave |
-| **Employees** | Full CRUD: create with auto employee number + auto temp login, edit profile, upload contract, terminate |
-| **Attendance** | View & manage daily attendance records, manual clock-in by admin |
+| **Employees** | Full CRUD: create with auto employee number + temp login, edit profile, upload contract, terminate. Contract expiry badge for employees expiring this month. Reporting To (supervisor) dropdown. |
+| **Attendance** | View & manage daily attendance records, manual clock-in/out by admin |
 | **Leave** | Manage leave types, allocate quotas, approve/reject/cancel requests |
-| **Payroll** | Configure salary components (allowances, BPJS, deductions), generate monthly payslips, lock & mark paid, **export to Excel** |
+| **Payroll** | Salary components (allowances, BPJS, deductions), monthly runs, payslip detail, lock & mark paid, Excel export, **BPJS/PPh21 seed**, prorate badge, **Excel import** for mass adjustment |
+| **Overtime** | Submit overtime requests, approve/reject with notes, filter by status |
+| **Shift & Roster** | Shift template CRUD + weekly roster grid (assign per employee per day) |
 | **Departments** | CRUD |
 | **Positions** | CRUD |
+| **Work Schedule** | Work hours, grace period, geofence radius + office coordinates |
 | **Roles & Permissions** | Create roles, assign to users, configure per-menu permissions (view/create/edit/delete) |
 | **Users** | List all users, reset password, extend temporary credentials |
+| **Audit Log** | Immutable log of sensitive changes (employee, payroll), filter by limit |
 
 ### Access Control
-- Menu visibility is driven by role permissions — users only see what their role allows
-- Temporary credentials (auto-created when adding an employee) expire in 3 days and are flagged with a banner
+- Menu visibility driven by role permissions — users only see what their role allows
+- Temporary credentials expire in 3 days and are flagged with a banner
+- Dashboard and sidebar adapt to current user's role
 
 ## Tech Stack
 
@@ -27,17 +32,17 @@ Admin web dashboard for the HRIS system, built with **React + Vite + Tailwind CS
 - **Tailwind CSS** 3 — utility-first styling
 - **TanStack Query** v5 — data fetching, caching, mutations
 - **React Router** v6 — client-side routing
-- **Axios** — HTTP client with JWT interceptor
-- **SheetJS (xlsx)** — client-side Excel export for payroll
+- **Axios** — HTTP client with JWT interceptor (auto-redirect to /login on 401)
+- **SheetJS (xlsx)** — Excel export (payroll report) + Excel import (mass payroll adjustment)
 
 ## Project Structure
 
 ```
 src/
   api/
-    client.ts          # axios instance + all API functions
+    client.ts              # axios instance + all API functions
   components/
-    Sidebar.tsx        # nav + user card
+    Sidebar.tsx            # nav + user card, permission-filtered links
     Modal.tsx
     FormField.tsx
     ConfirmDialog.tsx
@@ -45,20 +50,25 @@ src/
     TempPasswordBanner.tsx
     ChangePasswordModal.tsx
   context/
-    AuthContext.tsx    # JWT auth state
-    MenuContext.tsx    # role-based menu permissions
+    AuthContext.tsx         # JWT auth state
+    MenuContext.tsx         # role-based menu permissions
   pages/
     Login.tsx
     Dashboard.tsx
-    Employees.tsx / EmployeeForm.tsx
+    Employees.tsx           # list + contract expiry filter + stat cards
+    EmployeeForm.tsx        # create/edit with full profile tabs + reporting_to
     Attendance.tsx
     Leave.tsx
-    Payroll.tsx        # components + runs + payslip detail + Excel export
+    Payroll.tsx             # runs + components + Excel import tab
+    Overtime.tsx            # submit/approve/reject/cancel
+    Shift.tsx               # shift templates + weekly roster grid
+    WorkSchedule.tsx
     Departments.tsx / DepartmentForm.tsx
     Positions.tsx
     Roles.tsx
     Users.tsx
-  App.tsx              # routes
+    AuditLog.tsx
+  App.tsx                   # routes
   main.tsx
 ```
 
@@ -97,8 +107,6 @@ proxy: {
 },
 ```
 
-Change `target` to match your backend URL if deploying.
-
 ## Default Login
 
 After running migrations and `seed_admin.feel` on the backend:
@@ -116,7 +124,7 @@ All requests go to `/api/*` and require `Authorization: Bearer <token>` (except 
 |---|---|
 | Auth | `/api/auth/*` |
 | Master data | `/api/master/*` |
-| HR (employees, attendance, leave, payroll) | `/api/hr/*` |
+| HR (employees, attendance, leave, payroll, overtime) | `/api/hr/*` |
 
 ## Related Projects
 
