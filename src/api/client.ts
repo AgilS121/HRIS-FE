@@ -175,6 +175,28 @@ export const payrollApi = {
     api.get(`/hr/payslips/${id}`).then((r) => r.data.data),
 }
 
+export const scheduleApi = {
+  list:       (company_id: number) =>
+    api.get('/master/work-schedules', { params: { company_id } }).then((r) => r.data.data),
+  create:     (d: object) =>
+    api.post('/master/work-schedules', d).then((r) => r.data.data),
+  update:     (id: number, d: object) =>
+    api.put(`/master/work-schedules/${id}`, d).then((r) => r.data.data),
+  delete:     (id: number) =>
+    api.delete(`/master/work-schedules/${id}`).then((r) => r.data),
+}
+
+export const lateRulesApi = {
+  list:   (company_id: number) =>
+    api.get('/master/late-rules', { params: { company_id } }).then((r) => r.data.data),
+  create: (d: object) =>
+    api.post('/master/late-rules', d).then((r) => r.data.data),
+  update: (id: number, d: object) =>
+    api.put(`/master/late-rules/${id}`, d).then((r) => r.data.data),
+  delete: (id: number) =>
+    api.delete(`/master/late-rules/${id}`).then((r) => r.data),
+}
+
 export const leaveApi = {
   // Leave types
   types:      (company_id: number) =>

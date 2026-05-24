@@ -55,10 +55,18 @@ const TYPE_LABEL: Record<string, string> = {
   outsource: 'Outsource',
 }
 
+function isExpiringThisMonth(contract_end: string | null): boolean {
+  if (!contract_end) return false
+  const end = new Date(contract_end)
+  const now = new Date()
+  return end.getFullYear() === now.getFullYear() && end.getMonth() === now.getMonth()
+}
+
 export default function Employees() {
   const qc = useQueryClient()
   const { can } = useMenus()
   const [search, setSearch] = useState('')
+  const [showExpiring, setShowExpiring] = useState(false)
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<Employee | null>(null)
   const [terminating, setTerminating] = useState<Employee | null>(null)
@@ -79,15 +87,19 @@ export default function Employees() {
   const openAdd  = () => { setEditing(null); setFormOpen(true) }
   const openEdit = (emp: Employee) => { setEditing(emp); setFormOpen(true) }
 
-  const filtered = (data ?? []).filter(e =>
-    !search ||
-    e.full_name.toLowerCase().includes(search.toLowerCase()) ||
-    e.employee_no.toLowerCase().includes(search.toLowerCase())
-  )
+  const expiringCount = (data ?? []).filter(e => isExpiringThisMonth(e.contract_end)).length
+
+  const filtered = (data ?? []).filter(e => {
+    if (showExpiring && !isExpiringThisMonth(e.contract_end)) return false
+    return !search ||
+      e.full_name.toLowerCase().includes(search.toLowerCase()) ||
+      e.employee_no.toLowerCase().includes(search.toLowerCase())
+  })
 
   const stats = {
     total:      data?.length ?? 0,
     active:     data?.filter(e => e.status === 'active').length ?? 0,
+    expiring:   expiringCount,
     terminated: data?.filter(e => e.status === 'terminated').length ?? 0,
   }
 
@@ -113,14 +125,22 @@ export default function Employees() {
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Total Employees', value: stats.total,      color: 'var(--navy-500)' },
-          { label: 'Active',          value: stats.active,     color: 'var(--success-600)' },
-          { label: 'On Leave',        value: '—',              color: 'var(--warning-600)' },
-          { label: 'Terminated',      value: stats.terminated, color: 'var(--danger-600)' },
-        ].map(({ label, value, color }) => (
-          <div key={label} className="card px-5 py-4">
+          { label: 'Total Employees',    value: stats.total,      color: 'var(--navy-500)',    onClick: undefined },
+          { label: 'Active',             value: stats.active,     color: 'var(--success-600)', onClick: undefined },
+          { label: 'Contract Expiring',  value: stats.expiring,   color: 'var(--warning-600)', onClick: () => setShowExpiring(s => !s) },
+          { label: 'Terminated',         value: stats.terminated, color: 'var(--danger-600)',  onClick: undefined },
+        ].map(({ label, value, color, onClick }) => (
+          <div
+            key={label}
+            className="card px-5 py-4"
+            onClick={onClick}
+            style={{ cursor: onClick ? 'pointer' : undefined }}
+          >
             <p className="text-xs font-medium mb-1" style={{ color: 'var(--gray-500)' }}>{label}</p>
             <p className="text-2xl font-bold" style={{ fontFamily: 'Montserrat', color }}>{value}</p>
+            {label === 'Contract Expiring' && showExpiring && (
+              <p className="text-xs mt-1" style={{ color: 'var(--warning-600)' }}>Filtered ✓</p>
+            )}
           </div>
         ))}
       </div>
@@ -199,7 +219,12 @@ export default function Employees() {
                       {emp.position_name ?? <span style={{ color: 'var(--gray-300)' }}>—</span>}
                     </td>
                     <td className="px-5 py-3.5">
-                      <span className="badge-navy">{TYPE_LABEL[emp.employment_type] ?? emp.employment_type}</span>
+                      <div className="flex flex-col gap-1">
+                        <span className="badge-navy">{TYPE_LABEL[emp.employment_type] ?? emp.employment_type}</span>
+                        {isExpiringThisMonth(emp.contract_end) && (
+                          <span className="badge-yellow text-xs">Expiring</span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-5 py-3.5">
                       <span className={STATUS_BADGE[emp.status] ?? 'badge-gray'}>{emp.status}</span>

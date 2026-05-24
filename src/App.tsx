@@ -15,6 +15,7 @@ import Positions from '@/pages/Positions'
 import Roles from '@/pages/Roles'
 import Payroll from '@/pages/Payroll'
 import Users from '@/pages/Users'
+import WorkSchedule from '@/pages/WorkSchedule'
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
@@ -37,7 +38,8 @@ function AppShell() {
           <Route path="/positions"   element={<Positions />} />
           <Route path="/roles"       element={<Roles />} />
           <Route path="/payroll"     element={<Payroll />} />
-          <Route path="/users"       element={<Users />} />
+          <Route path="/users"         element={<Users />} />
+          <Route path="/work-schedule" element={<WorkSchedule />} />
         </Routes>
         </div>
       </main>

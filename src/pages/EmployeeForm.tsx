@@ -37,6 +37,8 @@ interface Employee {
   salary_grade: string | null
   basic_salary: number | null
   role_id: number | null
+  reporting_to: number | null
+  supervisor_name: string | null
 }
 
 interface Props {
@@ -71,6 +73,7 @@ const EMPTY_FORM = {
   department_id:    '',
   position_id:      '',
   role_id:          '',
+  reporting_to:     '',
   join_date:        '',
   employment_type:  'permanent',
   salary_grade:     '',
@@ -170,6 +173,7 @@ export default function EmployeeForm({ open, onClose, employee, companyId }: Pro
         bank_account_no:   employee.bank_account_no ?? '',
         bank_account_name: employee.bank_account_name ?? '',
         role_id:           employee.role_id ? String(employee.role_id) : '',
+        reporting_to:      employee.reporting_to ? String(employee.reporting_to) : '',
       })
     } else {
       setForm(EMPTY_FORM)
@@ -200,6 +204,11 @@ export default function EmployeeForm({ open, onClose, employee, companyId }: Pro
   const { data: roles = [] } = useQuery({
     queryKey: ['roles', companyId],
     queryFn: () => rolesApi.list(companyId),
+    enabled: open,
+  })
+  const { data: allEmployees = [] } = useQuery({
+    queryKey: ['employees', companyId],
+    queryFn: () => employeesApi.list(companyId),
     enabled: open,
   })
 
@@ -302,6 +311,7 @@ export default function EmployeeForm({ open, onClose, employee, companyId }: Pro
       bank_name:         nullable(form.bank_name),
       bank_account_no:   nullable(form.bank_account_no),
       bank_account_name: nullable(form.bank_account_name),
+      reporting_to:      form.reporting_to ? Number(form.reporting_to) : null,
     })
   }
 
@@ -310,9 +320,11 @@ export default function EmployeeForm({ open, onClose, employee, companyId }: Pro
     ?.response?.data?.message
 
   // Filtered positions per selected department (if backend doesn't filter)
-  const dept = departments as { id: number; name: string; code?: string }[]
-  const pos  = positions  as { id: number; name: string; department_id?: number }[]
-  const rol  = roles      as { id: number; name: string }[]
+  const dept    = departments as { id: number; name: string; code?: string }[]
+  const pos     = positions  as { id: number; name: string; department_id?: number }[]
+  const rol     = roles      as { id: number; name: string }[]
+  const emps    = (allEmployees as { id: number; full_name: string }[])
+    .filter(e => !employee || e.id !== employee.id)
 
   return (
     <Modal
@@ -527,24 +539,38 @@ export default function EmployeeForm({ open, onClose, employee, companyId }: Pro
               </FormField>
             </div>
 
-            <FormField label="Role & Access">
-              <select
-                className="input"
-                value={form.role_id}
-                onChange={set('role_id')}
-                disabled={isEdit}
-              >
-                <option value="">— No role (unrestricted) —</option>
-                {rol.map(r => (
-                  <option key={r.id} value={r.id}>{r.name}</option>
-                ))}
-              </select>
-              {isEdit && (
-                <p className="mt-1 text-xs" style={{ color: 'var(--gray-400)' }}>
-                  Change role from the Roles & Permissions page.
-                </p>
-              )}
-            </FormField>
+            <div className="grid grid-cols-2 gap-4">
+              <FormField label="Role & Access">
+                <select
+                  className="input"
+                  value={form.role_id}
+                  onChange={set('role_id')}
+                  disabled={isEdit}
+                >
+                  <option value="">— No role (unrestricted) —</option>
+                  {rol.map(r => (
+                    <option key={r.id} value={r.id}>{r.name}</option>
+                  ))}
+                </select>
+                {isEdit && (
+                  <p className="mt-1 text-xs" style={{ color: 'var(--gray-400)' }}>
+                    Change role from the Roles & Permissions page.
+                  </p>
+                )}
+              </FormField>
+              <FormField label="Reports To (Supervisor)">
+                <select
+                  className="input"
+                  value={form.reporting_to}
+                  onChange={set('reporting_to')}
+                >
+                  <option value="">— None —</option>
+                  {emps.map(e => (
+                    <option key={e.id} value={e.id}>{e.full_name}</option>
+                  ))}
+                </select>
+              </FormField>
+            </div>
 
             <div className="grid grid-cols-2 gap-4">
               <FormField label="Join Date" required error={errors.join_date}>
