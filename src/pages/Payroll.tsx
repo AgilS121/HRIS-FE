@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import * as XLSX from 'xlsx'
-import { payrollApi } from '@/api/client'
+import { payrollApi, employeesApi } from '@/api/client'
 import { useMenus } from '@/context/MenuContext'
 import Modal from '@/components/Modal'
 import FormField from '@/components/FormField'
@@ -1027,9 +1027,216 @@ function PayslipsView({ run, onBack }: { run: PayrollRun; onBack: () => void }) 
   )
 }
 
+// ─── Tab: Excel Import ────────────────────────────────────────────────────────
+
+function ImportTab() {
+  const [rows, setRows]         = useState<any[]>([])
+  const [errors, setErrors]     = useState<string[]>([])
+  const [importing, setImporting] = useState(false)
+  const [result, setResult]     = useState<string | null>(null)
+
+  const { data: components = [] } = useQuery<PayrollComponent[]>({
+    queryKey: ['payroll-components', COMPANY_ID],
+    queryFn:  () => payrollApi.components(COMPANY_ID),
+  })
+
+  const { data: employees = [] } = useQuery<any[]>({
+    queryKey: ['employees', COMPANY_ID],
+    queryFn:  () => employeesApi.list(COMPANY_ID),
+  })
+
+  const empMap  = useMemo(() => Object.fromEntries((employees as any[]).map(e => [e.employee_no, e.id])), [employees])
+  const compMap = useMemo(() => Object.fromEntries(components.map(c => [c.code, c.id])), [components])
+
+  function downloadTemplate() {
+    const wb  = XLSX.utils.book_new()
+    const hdr = [['employee_no', 'component_code', 'override_amount', 'effective_from (YYYY-MM-DD)', 'note']]
+    const ex  = (employees as any[]).slice(0, 3).map(e =>
+      [e.employee_no, components[0]?.code ?? 'BASIC', e.basic_salary ?? 0, new Date().toISOString().slice(0, 10), 'From Excel import']
+    )
+    const ws  = XLSX.utils.aoa_to_sheet([...hdr, ...ex])
+    ws['!cols'] = [{ wch: 16 }, { wch: 16 }, { wch: 18 }, { wch: 24 }, { wch: 30 }]
+    XLSX.utils.book_append_sheet(wb, ws, 'Import')
+    XLSX.writeFile(wb, 'payroll_import_template.xlsx')
+  }
+
+  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const wb   = XLSX.read(ev.target?.result, { type: 'binary' })
+      const ws   = wb.Sheets[wb.SheetNames[0]]
+      const data = XLSX.utils.sheet_to_json<any>(ws, { defval: '' })
+      const errs: string[] = []
+      const parsed = data.map((r: any, i: number) => {
+        const empNo   = String(r['employee_no'] ?? '').trim()
+        const compCode = String(r['component_code'] ?? '').trim()
+        const amount  = Number(r['override_amount'])
+        if (!empNo)   errs.push(`Row ${i + 2}: missing employee_no`)
+        if (!compCode) errs.push(`Row ${i + 2}: missing component_code`)
+        if (isNaN(amount) || amount < 0) errs.push(`Row ${i + 2}: invalid override_amount`)
+        const empId  = empMap[empNo]
+        const compId = compMap[compCode]
+        if (!empId)  errs.push(`Row ${i + 2}: employee_no "${empNo}" not found`)
+        if (!compId) errs.push(`Row ${i + 2}: component_code "${compCode}" not found`)
+        return {
+          employee_no:     empNo,
+          component_code:  compCode,
+          employee_id:     empId,
+          component_id:    compId,
+          override_amount: amount,
+          effective_from:  r['effective_from (YYYY-MM-DD)'] || r['effective_from'] || null,
+          note:            r['note'] || null,
+        }
+      })
+      setErrors(errs)
+      setRows(parsed)
+      setResult(null)
+    }
+    reader.readAsBinaryString(file)
+  }
+
+  async function handleImport() {
+    if (errors.length > 0 || rows.length === 0) return
+    const valid = rows.filter(r => r.employee_id && r.component_id)
+    if (valid.length === 0) return
+    setImporting(true)
+    setResult(null)
+    try {
+      await payrollApi.batchComponents(valid.map(r => ({
+        employee_id:     r.employee_id,
+        component_id:    r.component_id,
+        override_amount: r.override_amount,
+        effective_from:  r.effective_from,
+        note:            r.note,
+      })))
+      setResult(`Imported ${valid.length} rows successfully.`)
+      setRows([])
+    } catch {
+      setResult('Import failed. Please check the data and try again.')
+    } finally {
+      setImporting(false)
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="card px-5 py-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-semibold" style={{ color: 'var(--gray-800)' }}>
+              Mass Payroll Adjustment
+            </p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--gray-500)' }}>
+              Upload an Excel file to bulk-update employee salary components. Download the template first.
+            </p>
+          </div>
+          <button className="btn-md btn-secondary text-sm" onClick={downloadTemplate}>
+            ↓ Download Template
+          </button>
+        </div>
+
+        <div>
+          <label className="form-label">Upload Excel File (.xlsx)</label>
+          <input
+            type="file"
+            accept=".xlsx,.xls"
+            className="input text-sm py-2"
+            onChange={handleFile}
+          />
+        </div>
+
+        {result && (
+          <p className="text-xs px-3 py-2 rounded-md"
+             style={{
+               background: result.includes('failed') ? 'var(--danger-50)' : 'var(--success-50)',
+               color:      result.includes('failed') ? 'var(--danger-700)' : 'var(--success-700)',
+             }}>
+            {result}
+          </p>
+        )}
+      </div>
+
+      {errors.length > 0 && (
+        <div className="card px-5 py-4">
+          <p className="text-sm font-semibold mb-2" style={{ color: 'var(--danger-700)' }}>
+            Validation Errors
+          </p>
+          <ul className="space-y-1">
+            {errors.map((e, i) => (
+              <li key={i} className="text-xs" style={{ color: 'var(--danger-600)' }}>• {e}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {rows.length > 0 && (
+        <div className="card overflow-hidden">
+          <div className="px-5 py-3 flex items-center justify-between"
+               style={{ borderBottom: '1px solid var(--gray-200)' }}>
+            <p className="text-sm font-medium" style={{ color: 'var(--gray-700)' }}>
+              Preview — {rows.length} rows
+              {errors.length > 0 && (
+                <span className="ml-2 text-xs" style={{ color: 'var(--danger-600)' }}>
+                  ({errors.length} errors — fix before importing)
+                </span>
+              )}
+            </p>
+            {errors.length === 0 && rows.length > 0 && (
+              <button className="btn-md btn-primary text-sm" onClick={handleImport} disabled={importing}>
+                {importing ? 'Importing…' : `Import ${rows.length} rows`}
+              </button>
+            )}
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr style={{ background: 'var(--gray-50)', borderBottom: '1px solid var(--gray-200)' }}>
+                  {['Employee No', 'Component', 'Amount', 'Effective From', 'Note', 'Status'].map(h => (
+                    <th key={h} className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide"
+                        style={{ color: 'var(--gray-500)' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r, i) => {
+                  const ok = r.employee_id && r.component_id
+                  return (
+                    <tr key={i}
+                        style={{ borderBottom: i < rows.length - 1 ? '1px solid var(--gray-100)' : undefined,
+                                 background: ok ? '' : 'var(--danger-50)' }}>
+                      <td className="px-4 py-2 font-mono text-xs">{r.employee_no}</td>
+                      <td className="px-4 py-2 font-mono text-xs">{r.component_code}</td>
+                      <td className="px-4 py-2 text-sm font-medium" style={{ color: 'var(--gray-800)' }}>
+                        {fmtMoney(r.override_amount)}
+                      </td>
+                      <td className="px-4 py-2 text-xs" style={{ color: 'var(--gray-500)' }}>
+                        {r.effective_from || '—'}
+                      </td>
+                      <td className="px-4 py-2 text-xs" style={{ color: 'var(--gray-500)' }}>
+                        {r.note || '—'}
+                      </td>
+                      <td className="px-4 py-2">
+                        {ok
+                          ? <span className="badge-green text-xs">OK</span>
+                          : <span className="badge-red text-xs">Error</span>}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-type Tab = 'components' | 'runs'
+type Tab = 'components' | 'runs' | 'import'
 
 export default function Payroll() {
   const [activeTab, setActiveTab]       = useState<Tab>('runs')
@@ -1058,6 +1265,7 @@ export default function Payroll() {
         {([
           { key: 'runs',       label: 'Payroll Runs' },
           { key: 'components', label: 'Salary Components' },
+          { key: 'import',     label: 'Excel Import' },
         ] as { key: Tab; label: string }[]).map(tab => (
           <button
             key={tab.key}
@@ -1076,6 +1284,7 @@ export default function Payroll() {
 
       {activeTab === 'runs'       && <RunsTab onViewPayslips={run => setViewingRun(run)} />}
       {activeTab === 'components' && <ComponentsTab />}
+      {activeTab === 'import'     && <ImportTab />}
     </div>
   )
 }

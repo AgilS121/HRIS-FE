@@ -177,11 +177,50 @@ export const payrollApi = {
   // BPJS & tax component seed
   seedBpjs: (company_id: number) =>
     api.post('/hr/payroll/seed-bpjs', {}, { params: { company_id } }).then((r) => r.data.data),
+
+  // Excel import — batch upsert employee components
+  batchComponents: (rows: object[]) =>
+    api.post('/hr/payroll/batch-components', { rows }).then((r) => r.data.data),
 }
 
 export const auditApi = {
   list: (company_id: number, limit?: number) =>
     api.get('/hr/audit-logs', { params: { company_id, limit: limit ?? 100 } }).then((r) => r.data.data),
+}
+
+export const overtimeApi = {
+  list:    (company_id: number) =>
+    api.get('/hr/overtime', { params: { company_id } }).then((r) => r.data.data),
+  mine:    (employee_id: number) =>
+    api.get('/hr/overtime/mine', { params: { employee_id } }).then((r) => r.data.data),
+  create:  (d: object) =>
+    api.post('/hr/overtime', d).then((r) => r.data.data),
+  approve: (id: number, note?: string) =>
+    api.put(`/hr/overtime/${id}/approve`, { note }).then((r) => r.data.data),
+  reject:  (id: number, note: string) =>
+    api.put(`/hr/overtime/${id}/reject`, { note }).then((r) => r.data.data),
+  cancel:  (id: number) =>
+    api.delete(`/hr/overtime/${id}`).then((r) => r.data),
+}
+
+export const shiftsApi = {
+  list:   (company_id: number) =>
+    api.get('/master/shifts', { params: { company_id } }).then((r) => r.data.data),
+  create: (d: object) =>
+    api.post('/master/shifts', d).then((r) => r.data.data),
+  update: (id: number, d: object) =>
+    api.put(`/master/shifts/${id}`, d).then((r) => r.data.data),
+  delete: (id: number) =>
+    api.delete(`/master/shifts/${id}`).then((r) => r.data),
+}
+
+export const rostersApi = {
+  list:   (company_id: number, date_from: string, date_to: string) =>
+    api.get('/master/rosters', { params: { company_id, date_from, date_to } }).then((r) => r.data.data),
+  upsert: (d: object) =>
+    api.post('/master/rosters', d).then((r) => r.data.data),
+  delete: (id: number) =>
+    api.delete(`/master/rosters/${id}`).then((r) => r.data),
 }
 
 export const scheduleApi = {
