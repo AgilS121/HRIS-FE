@@ -60,6 +60,7 @@ interface Payslip {
   absent_days:      number
   leave_days:       number
   working_days:     number
+  prorate_days:     number | null
 }
 
 interface PayslipItem {
@@ -420,9 +421,12 @@ function PayslipModal({ open, onClose, payslipId }: { open: boolean; onClose: ()
           {/* Attendance summary */}
           <div className="grid grid-cols-3 gap-3 text-center">
             {[
-              { label: 'Working Days', value: payslip.working_days },
-              { label: 'Absent (cut)', value: payslip.absent_days, warn: payslip.absent_days > 0 },
-              { label: 'Leave Days',   value: payslip.leave_days },
+              { label: 'Working Days',  value: payslip.working_days },
+              { label: 'Absent (cut)',  value: payslip.absent_days, warn: payslip.absent_days > 0 },
+              { label: 'Leave Days',    value: payslip.leave_days },
+              ...(payslip.prorate_days != null
+                ? [{ label: 'Prorate Days', value: payslip.prorate_days, warn: true }]
+                : []),
             ].map(({ label, value, warn }) => (
               <div key={label} className="rounded-md px-3 py-2"
                    style={{ background: 'var(--gray-50)' }}>
@@ -509,9 +513,11 @@ function PayslipModal({ open, onClose, payslipId }: { open: boolean; onClose: ()
 function ComponentsTab() {
   const qc = useQueryClient()
   const { can } = useMenus()
-  const [modalOpen, setModalOpen] = useState(false)
-  const [editing, setEditing]     = useState<PayrollComponent | null>(null)
-  const [deleting, setDeleting]   = useState<PayrollComponent | null>(null)
+  const [modalOpen, setModalOpen]   = useState(false)
+  const [editing, setEditing]       = useState<PayrollComponent | null>(null)
+  const [deleting, setDeleting]     = useState<PayrollComponent | null>(null)
+  const [seeding, setSeeding]       = useState(false)
+  const [seedMsg, setSeedMsg]       = useState<string | null>(null)
 
   const { data: components = [], isLoading, isError } = useQuery<PayrollComponent[]>({
     queryKey: ['payroll-components', COMPANY_ID],
@@ -522,6 +528,20 @@ function ComponentsTab() {
     mutationFn: (id: number) => payrollApi.deleteComponent(id),
     onSuccess:  () => { qc.invalidateQueries({ queryKey: ['payroll-components'] }); setDeleting(null) },
   })
+
+  const handleSeedBpjs = async () => {
+    setSeeding(true)
+    setSeedMsg(null)
+    try {
+      await payrollApi.seedBpjs(COMPANY_ID)
+      qc.invalidateQueries({ queryKey: ['payroll-components'] })
+      setSeedMsg('BPJS & PPh21 components seeded successfully.')
+    } catch {
+      setSeedMsg('Seed failed. Components may already exist.')
+    } finally {
+      setSeeding(false)
+    }
+  }
 
   const earnings   = components.filter(c => c.type === 'earning')
   const deductions = components.filter(c => c.type === 'deduction')
@@ -615,10 +635,29 @@ function ComponentsTab() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
-        {can('payroll', 'create') && (
-          <button className="btn-md btn-primary" onClick={openAdd}>+ Add Component</button>
-        )}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          {seedMsg && (
+            <p className="text-xs px-3 py-1.5 rounded-md"
+               style={{ background: seedMsg.includes('failed') ? 'var(--danger-50)' : 'var(--success-50)',
+                        color: seedMsg.includes('failed') ? 'var(--danger-700)' : 'var(--success-700)' }}>
+              {seedMsg}
+            </p>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            className="btn-md btn-secondary text-sm"
+            disabled={seeding}
+            onClick={handleSeedBpjs}
+            title="Auto-create BPJS Kes, JHT, JP, and PPh21 components with standard rates"
+          >
+            {seeding ? '…' : 'Seed BPJS & PPh21'}
+          </button>
+          {can('payroll', 'create') && (
+            <button className="btn-md btn-primary" onClick={openAdd}>+ Add Component</button>
+          )}
+        </div>
       </div>
 
       {isError ? <ErrorMsg message="Failed to load components." />
@@ -954,9 +993,14 @@ function PayslipsView({ run, onBack }: { run: PayrollRun; onBack: () => void }) 
                       {fmtMoney(p.net_salary)}
                     </td>
                     <td className="px-5 py-3.5 text-sm text-center">
-                      {p.absent_days > 0
-                        ? <span className="badge-yellow">{p.absent_days}d</span>
-                        : <span style={{ color: 'var(--gray-300)' }}>—</span>}
+                      <div className="flex flex-col gap-1 items-center">
+                        {p.absent_days > 0
+                          ? <span className="badge-yellow">{p.absent_days}d</span>
+                          : <span style={{ color: 'var(--gray-300)' }}>—</span>}
+                        {p.prorate_days != null && (
+                          <span className="badge-navy text-xs">{p.prorate_days}d prorated</span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-5 py-3.5">
                       <button className="btn-sm btn-ghost text-xs" onClick={() => setSelectedId(p.id)}>

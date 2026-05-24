@@ -173,6 +173,15 @@ export const payrollApi = {
     api.get(`/hr/payroll-runs/${run_id}/payslips`).then((r) => r.data.data),
   payslip:  (id: number) =>
     api.get(`/hr/payslips/${id}`).then((r) => r.data.data),
+
+  // BPJS & tax component seed
+  seedBpjs: (company_id: number) =>
+    api.post('/hr/payroll/seed-bpjs', {}, { params: { company_id } }).then((r) => r.data.data),
+}
+
+export const auditApi = {
+  list: (company_id: number, limit?: number) =>
+    api.get('/hr/audit-logs', { params: { company_id, limit: limit ?? 100 } }).then((r) => r.data.data),
 }
 
 export const scheduleApi = {

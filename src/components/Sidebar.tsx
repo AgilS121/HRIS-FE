@@ -11,6 +11,7 @@ const ALL_LINKS = [
   { to: '/departments', label: 'Departments',        icon: '🏢', key: 'departments' },
   { to: '/positions',   label: 'Positions',          icon: '🎯', key: 'positions'   },
   { to: '/work-schedule', label: 'Work Schedule',      icon: '🕐', key: 'work_schedule' },
+  { to: '/audit-log',    label: 'Audit Log',          icon: '📝', key: 'audit_log'     },
   { to: '/roles',       label: 'Roles & Permissions',icon: '🔐', key: 'roles'       },
   { to: '/users',       label: 'Users',              icon: '👥', key: 'users'       },
 ]
