@@ -34,6 +34,9 @@ export const authApi = {
   extendTemp:     (userId: number) =>
     api.post(`/auth/users/${userId}/extend-temp`, {}).then((r) => r.data.data),
   tempUsers:      () => api.get('/auth/temp-users').then((r) => r.data.data),
+  allUsers:       () => api.get('/auth/users').then((r) => r.data.data),
+  resetPassword:  (userId: number, newPassword: string) =>
+    api.post(`/auth/users/${userId}/reset-password`, { new_password: newPassword }).then((r) => r.data.data),
 }
 
 export interface MenuPermission {

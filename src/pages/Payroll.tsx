@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import * as XLSX from 'xlsx'
 import { payrollApi } from '@/api/client'
 import { useMenus } from '@/context/MenuContext'
 import Modal from '@/components/Modal'
@@ -93,6 +94,57 @@ const BASIS_LABEL: Record<string, string> = {
 
 function fmtMoney(n: number) {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n)
+}
+
+function exportToExcel(run: PayrollRun, payslips: Payslip[]) {
+  const wb   = XLSX.utils.book_new()
+  const period = `${MONTHS[run.period_month - 1]} ${run.period_year}`
+
+  const info: unknown[][] = [
+    ['Payroll Report', period],
+    ['Status', run.status.toUpperCase()],
+    ['Working Days', run.working_days],
+    ['Total Employees', payslips.length],
+    [],
+  ]
+
+  const headers = [
+    'No', 'Employee Name', 'Employee No', 'Department',
+    'Basic Salary', 'Gross Earnings', 'Total Deductions', 'Net Salary',
+    'Absent Days', 'Leave Days',
+  ]
+
+  const rows = payslips.map((p, i) => [
+    i + 1,
+    p.employee_name,
+    p.employee_no,
+    p.department_name ?? '-',
+    p.basic_salary,
+    p.gross_earnings,
+    p.total_deductions,
+    p.net_salary,
+    p.absent_days,
+    p.leave_days,
+  ])
+
+  const totalsRow = [
+    '', 'TOTAL', '', '',
+    payslips.reduce((s, p) => s + p.basic_salary,     0),
+    payslips.reduce((s, p) => s + p.gross_earnings,   0),
+    payslips.reduce((s, p) => s + p.total_deductions, 0),
+    payslips.reduce((s, p) => s + p.net_salary,       0),
+    '', '',
+  ]
+
+  const ws = XLSX.utils.aoa_to_sheet([...info, headers, ...rows, [], totalsRow])
+  ws['!cols'] = [
+    { wch: 4 }, { wch: 30 }, { wch: 14 }, { wch: 22 },
+    { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 18 },
+    { wch: 12 }, { wch: 12 },
+  ]
+
+  XLSX.utils.book_append_sheet(wb, ws, 'Payroll')
+  XLSX.writeFile(wb, `Payroll_${run.period_year}_${String(run.period_month).padStart(2, '0')}_${period.replace(' ', '_')}.xlsx`)
 }
 
 function Spinner() {
@@ -591,6 +643,35 @@ function ComponentsTab() {
   )
 }
 
+// ─── Download button (fetches payslips then exports) ─────────────────────────
+
+function DownloadRunButton({ run }: { run: PayrollRun }) {
+  const [busy, setBusy] = useState(false)
+
+  const handleDownload = async () => {
+    setBusy(true)
+    try {
+      const payslips: Payslip[] = await payrollApi.payslips(run.id)
+      exportToExcel(run, payslips)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <button
+      className="btn-sm text-xs px-2.5 py-1 rounded-md font-medium transition-colors"
+      style={{ background: 'var(--success-50)', color: 'var(--success-700)' }}
+      onMouseEnter={e => (e.currentTarget.style.background = 'var(--success-100)')}
+      onMouseLeave={e => (e.currentTarget.style.background = 'var(--success-50)')}
+      disabled={busy}
+      onClick={handleDownload}
+    >
+      {busy ? '…' : '↓ Excel'}
+    </button>
+  )
+}
+
 // ─── Tab: Payroll Runs ────────────────────────────────────────────────────────
 
 function RunsTab({ onViewPayslips }: { onViewPayslips: (run: PayrollRun) => void }) {
@@ -685,6 +766,9 @@ function RunsTab({ onViewPayslips }: { onViewPayslips: (run: PayrollRun) => void
                               View
                             </button>
                           )}
+                          {run.payslip_count > 0 && (
+                            <DownloadRunButton run={run} />
+                          )}
                           {run.status === 'draft' && can('payroll', 'edit') && (
                             <button
                               className="btn-sm text-xs px-2.5 py-1 rounded-md font-medium transition-colors"
@@ -777,20 +861,33 @@ function PayslipsView({ run, onBack }: { run: PayrollRun; onBack: () => void }) 
   return (
     <div className="space-y-4">
       {/* Breadcrumb + title */}
-      <div className="flex items-center gap-3">
-        <button className="btn-sm btn-ghost text-sm" onClick={onBack}>← Back</button>
-        <div>
-          <h2 className="text-base font-semibold" style={{ fontFamily: 'Montserrat', color: 'var(--gray-900)' }}>
-            {MONTHS[run.period_month - 1]} {run.period_year}
-          </h2>
-          <div className="flex items-center gap-2 mt-0.5">
-            <span className="text-xs px-2 py-0.5 rounded-full font-semibold capitalize"
-                  style={{ background: sc.bg, color: sc.text }}>{run.status}</span>
-            <span className="text-xs" style={{ color: 'var(--gray-400)' }}>
-              {run.working_days} working days · {payslips.length} employees
-            </span>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <button className="btn-sm btn-ghost text-sm" onClick={onBack}>← Back</button>
+          <div>
+            <h2 className="text-base font-semibold" style={{ fontFamily: 'Montserrat', color: 'var(--gray-900)' }}>
+              {MONTHS[run.period_month - 1]} {run.period_year}
+            </h2>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="text-xs px-2 py-0.5 rounded-full font-semibold capitalize"
+                    style={{ background: sc.bg, color: sc.text }}>{run.status}</span>
+              <span className="text-xs" style={{ color: 'var(--gray-400)' }}>
+                {run.working_days} working days · {payslips.length} employees
+              </span>
+            </div>
           </div>
         </div>
+        {payslips.length > 0 && (
+          <button
+            className="btn-md flex items-center gap-2 font-medium text-sm"
+            style={{ background: 'var(--success-600)', color: '#fff', borderRadius: '8px', padding: '8px 16px' }}
+            onMouseEnter={e => (e.currentTarget.style.background = 'var(--success-700)')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'var(--success-600)')}
+            onClick={() => exportToExcel(run, payslips)}
+          >
+            ↓ Download Excel
+          </button>
+        )}
       </div>
 
       {/* Summary cards */}

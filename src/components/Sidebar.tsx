@@ -38,7 +38,7 @@ export default function Sidebar() {
             <p className="text-white font-bold text-sm leading-tight" style={{ fontFamily: 'Montserrat' }}>
               HRIS
             </p>
-            <p className="text-xs" style={{ color: 'rgba(200,215,255,0.5)' }}>TUV Nord Indonesia</p>
+            <p className="text-xs" style={{ color: 'rgba(200,215,255,0.5)' }}>HR Management System</p>
           </div>
         </div>
       </div>

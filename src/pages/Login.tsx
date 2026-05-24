@@ -84,7 +84,7 @@ export default function Login() {
             </div>
             <div>
               <p className="text-white font-bold text-lg leading-tight" style={{ fontFamily: 'Montserrat' }}>HRIS</p>
-              <p className="text-xs" style={{ color: 'rgba(200,215,255,0.6)' }}>TUV Nord Indonesia</p>
+              <p className="text-xs" style={{ color: 'rgba(200,215,255,0.6)' }}>HR Management System</p>
             </div>
           </div>
 
@@ -167,15 +167,15 @@ export default function Login() {
           <form onSubmit={submit} className="space-y-4">
             <div className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
               <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--gray-700)' }}>
-                Email address
+                Email / Employee number
               </label>
               <input
-                type="email"
+                type="text"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="input"
-                placeholder="you@company.com"
+                placeholder="Email or employee number"
               />
             </div>
 
@@ -215,7 +215,7 @@ export default function Login() {
           </form>
 
           <p className="mt-8 text-center text-xs" style={{ color: 'var(--gray-400)' }}>
-            © {new Date().getFullYear()} TUV Nord Indonesia · DTIT Division
+            © {new Date().getFullYear()} HRIS · All rights reserved
           </p>
         </div>
       </div>
